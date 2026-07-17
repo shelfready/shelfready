@@ -104,6 +104,19 @@ describe("processStripeEvent", () => {
     expect((await merchantRow()).plan).toBe("free");
   });
 
+  it("applies customer.subscription.created like an update", async () => {
+    const result = await processStripeEvent(
+      db,
+      fakeEvent("evt_4b", "customer.subscription.created", {
+        customer: "cus_123",
+        status: "active",
+        metadata: { plan: "growth" },
+      }),
+    );
+    expect(result.applied).toBe(true);
+    expect((await merchantRow()).plan).toBe("growth");
+  });
+
   it("records but does not apply unhandled event types", async () => {
     const result = await processStripeEvent(
       db,
