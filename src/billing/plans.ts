@@ -25,7 +25,9 @@ export interface Entitlements {
 export function entitlementsFor(plan: PlanId): Entitlements {
   return {
     maxSkus: PLANS[plan].maxSkus,
-    hostedFeeds: plan !== "free",
+    // Free includes hosted feeds for its tiny cap — that's the trial hook
+    // (decision recorded on issue #22); enrichment + monitoring are paid.
+    hostedFeeds: true,
     enrichment: plan === "growth" || plan === "scale",
     freshnessMonitoring: plan !== "free",
   };

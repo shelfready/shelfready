@@ -32,13 +32,19 @@ export async function runScheduledDriftChecks(db: AnyDb) {
   const all = await db.select({ id: merchants.id }).from(merchants);
   let checked = 0;
   let failed = 0;
+  let skippedUnentitled = 0;
+  const { entitlementsOf } = await import("@/billing/entitlements");
   for (const merchant of all) {
     try {
+      if (!(await entitlementsOf(db, merchant.id)).freshnessMonitoring) {
+        skippedUnentitled++;
+        continue;
+      }
       await runDriftCheck(db, merchant.id);
       checked++;
     } catch {
       failed++;
     }
   }
-  return { merchants: all.length, checked, failed };
+  return { merchants: all.length, checked, failed, skippedUnentitled };
 }
