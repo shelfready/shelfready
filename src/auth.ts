@@ -55,6 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
     verificationTokensTable: verificationTokens,
   }),
   session: { strategy: "database" },
+  pages: { signIn: "/login", verifyRequest: "/login/check-email" },
   providers,
   events: {
     async createUser({ user }) {
