@@ -1,6 +1,6 @@
 # ADR-0002: Stack & hosting
 
-Status: Accepted · 2026-07-17
+Status: Accepted · 2026-07-17 · Hosting portion superseded by ADR-0005 (self-host on netcup VPS)
 
 ## Context
 

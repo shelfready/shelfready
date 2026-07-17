@@ -6,7 +6,7 @@ M0 and M1 are fully detailed as issues with acceptance criteria; later milestone
 
 ## M0 — Foundation
 
-Repo + org, CI (build/lint/test on every push + PR), `CLAUDE.md`, `docs/WORKFLOW.md`, this roadmap, first ADRs, Next.js + Postgres + Drizzle skeleton, auth, DB schema (merchants/sources/products/variants/feed_runs/audit_findings), Stripe billing scaffold (test mode), deploy pipeline. **Exit: the app boots, CI is green, a release `v0.1.0` is tagged.**
+Repo + org, CI (build/lint/test on every push + PR), `CLAUDE.md`, `docs/WORKFLOW.md`, this roadmap, first ADRs, Next.js + Postgres + Drizzle skeleton, auth, DB schema (merchants/sources/products/variants/feed_runs/audit_findings), Stripe billing scaffold (test mode), deploy pipeline (Docker → netcup VPS behind Cloudflare, ADR-0005; VPS provisioning is the last step of M0). **Exit: the app boots, CI is green, a release `v0.1.0` is tagged.**
 
 ## M1 — Ingest
 

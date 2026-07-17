@@ -19,7 +19,7 @@ Pre-release, under active development. See [docs/ROADMAP.md](docs/ROADMAP.md) fo
 
 ## Stack
 
-TypeScript on Node 22 · Next.js (App Router) on Vercel · Postgres (Neon) + Drizzle ORM · Upstash Redis · Inngest (jobs/cron) · Cloudflare R2 + CDN for hosted feed artifacts · Stripe (billing) · Anthropic Claude (enrichment + audit).
+TypeScript on Node 22 · Next.js (App Router), self-hosted in Docker on a VPS behind Cloudflare · Postgres (Neon) + Drizzle ORM · Upstash Redis · Inngest (jobs/cron) · Cloudflare R2 + CDN for hosted feed artifacts · Stripe (billing) · Anthropic Claude (enrichment + audit).
 
 Observability for server-side Claude calls is via [Otterscope](https://github.com/otterscope) (self-hosted OpenTelemetry agent-run tracing).
 
