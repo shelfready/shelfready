@@ -13,21 +13,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Guard until the app skeleton lands (M0 issue #1 removes it — see that
-      # issue's acceptance criteria). After that, build/lint/test run
-      # unconditionally on every push and PR.
-      - name: Detect app
-        id: app
-        run: test -f package.json && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
+          cache: npm
       - name: Install
-        if: steps.app.outputs.present == 'true'
         run: npm ci
       - name: Build
-        if: steps.app.outputs.present == 'true'
         run: npm run build
       - name: Lint
-        if: steps.app.outputs.present == 'true'
         run: npm run lint
       - name: Test
-        if: steps.app.outputs.present == 'true'
         run: npm test
