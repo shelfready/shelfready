@@ -1,0 +1,6 @@
+# Staging vhost — Cloudflare DNS points staging.useshelfready.com at the
+# VPS; Caddy provisions TLS automatically (use DNS-only/grey-cloud, or
+# switch the site to a Cloudflare Tunnel later if we prefer orange-cloud).
+staging.useshelfready.com {
+	reverse_proxy app:3000
+}

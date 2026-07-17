@@ -1,0 +1,26 @@
+# Staging stack on the VPS (ADR-0005). Copy this directory to the box,
+# put real values in an untracked .env next to it, then:
+#   docker compose up -d
+# Rollback: IMAGE_TAG=<previous sha> docker compose up -d app
+services:
+  app:
+    image: ghcr.io/shelfready/shelfready:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

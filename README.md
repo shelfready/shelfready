@@ -36,4 +36,8 @@ npm test           # vitest
 
 Background jobs run on [Inngest](https://www.inngest.com). Locally: `npx inngest-cli dev -u http://localhost:3112/api/inngest` (with `INNGEST_DEV=1` set for the app) and open http://localhost:8288 to inspect/trigger functions. Database migrations: `npm run db:generate` / `db:migrate` / `db:seed`.
 
+## Deploy
+
+Merges to `main` build a Docker image (standalone Next.js, see `Dockerfile`) pushed to `ghcr.io/shelfready/shelfready` (`latest` + commit sha), then — once staging secrets are configured — run migrations against Neon and `docker compose pull && up -d` over SSH on the VPS (`deploy/compose.yml`, Caddy TLS, `staging.useshelfready.com`). Rollback: `IMAGE_TAG=<previous sha> docker compose up -d app` on the box. Required repo secrets: `VPS_SSH_KEY`, `VPS_HOST`, `VPS_USER`, `DATABASE_URL`. CI (build/lint/test) remains the merge gate; deploy never gates PRs.
+
 Contribution flow, quality gates, and working agreements: [docs/WORKFLOW.md](docs/WORKFLOW.md). Architectural decisions: [docs/adr/](docs/adr/).
