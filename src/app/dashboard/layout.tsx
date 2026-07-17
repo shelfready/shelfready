@@ -9,6 +9,7 @@ const NAV = [
   { href: "/dashboard/sources", label: "Sources", enabled: true },
   { href: "/dashboard/feeds", label: "Feeds", enabled: true },
   { href: "/dashboard/audit", label: "Audit", enabled: true },
+  { href: "/dashboard/enrichment", label: "Enrichment", enabled: true },
   { href: "/dashboard/settings", label: "Settings", enabled: true },
 ];
 

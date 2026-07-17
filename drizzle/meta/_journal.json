@@ -36,6 +36,13 @@
       "when": 1784297887075,
       "tag": "0004_chief_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784299160633,
+      "tag": "0005_mighty_purple_man",
+      "breakpoints": true
     }
   ]
 }
