@@ -7,6 +7,7 @@ import { runSync } from "@/connectors/sync";
 import { runDriftCheck } from "./drift";
 import "@/connectors/csv";
 import "@/connectors/woocommerce";
+import "@/connectors/feed";
 
 type AnyDb = ReturnType<typeof getDb> | TestDb;
 
