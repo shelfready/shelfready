@@ -97,9 +97,9 @@ jobs:
           scp -i ~/.ssh/deploy_key -q deploy/compose.yml deploy/Caddyfile deploy/prod-bootstrap.sh "$VPS_USER@$VPS_HOST:~/shelfready/"
           ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" "sh ~/shelfready/prod-bootstrap.sh"
           if [ "$TARGET" = "prod" ]; then
-            REMOTE="export PROD_IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile prod --profile ops pull -q && docker compose --profile prod --profile ops run --rm migrate-prod && docker compose --profile prod up -d app-prod umami caddy && docker logout ghcr.io"
+            REMOTE="export PROD_IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile prod --profile ops pull -q && docker compose --profile prod --profile ops run --rm migrate-prod && docker compose --profile prod up -d app-prod umami caddy && docker compose exec -T caddy caddy reload -c /etc/caddy/Caddyfile && docker logout ghcr.io"
           else
-            REMOTE="export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
+            REMOTE="export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker compose exec -T caddy caddy reload -c /etc/caddy/Caddyfile && docker logout ghcr.io"
           fi
           echo "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" "$REMOTE"
       - name: Skipped (no staging secrets yet)
