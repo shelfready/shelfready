@@ -120,7 +120,22 @@ export function forMerchant(db: AnyDb, merchantId: string) {
     },
     sources: scoped(db, merchantId, sources),
     feedRuns: scoped(db, merchantId, feedRuns),
-    auditFindings: scoped(db, merchantId, auditFindings),
+    auditFindings: {
+      ...scoped(db, merchantId, auditFindings),
+      /** Audit snapshot semantics: replace all findings atomically. */
+      replaceAll: async (
+        values: Omit<typeof auditFindings.$inferInsert, "merchantId" | "id">[],
+      ) => {
+        await db
+          .delete(auditFindings)
+          .where(eq(auditFindings.merchantId, merchantId));
+        if (values.length > 0) {
+          await db
+            .insert(auditFindings)
+            .values(values.map((v) => ({ ...v, merchantId })));
+        }
+      },
+    },
   };
 }
 

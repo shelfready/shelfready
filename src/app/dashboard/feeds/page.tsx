@@ -2,7 +2,6 @@ import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { feedRuns, merchants } from "@/db/schema";
-import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
 import { FEED_FILES, getOrCreateFeedToken, sellerSettingsOf } from "@/feeds/render";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
@@ -11,7 +10,6 @@ import { CopyButton, RenderNowButton } from "./actions";
 export default async function FeedsPage() {
   const { merchant } = await requireMerchant();
   const db = getDb();
-  const scope = forMerchant(db, merchant.merchantId);
   const [m] = await db
     .select()
     .from(merchants)
