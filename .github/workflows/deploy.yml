@@ -9,6 +9,15 @@ on:
       - .dockerignore
       - deploy/**
       - .github/workflows/deploy.yml
+  # Manual deploy/rollback of an existing image tag (GHCR packages are
+  # org-restricted private, so the box can only pull via this workflow's
+  # token): gh workflow run Deploy -f image_tag=<sha|latest>
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (commit sha or latest)"
+        default: latest
+        required: true
 
 permissions:
   contents: read
@@ -18,6 +27,7 @@ jobs:
   # Builds the image on PRs that touch the deploy surface (verification)
   # and on every push to main (pushed to GHCR, tagged latest + sha).
   build:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +63,7 @@ jobs:
   # box via the migrate image — CI holds no DB credentials (ADR-0008).
   deploy:
     needs: build
-    if: github.event_name == 'push'
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && needs.build.result == 'success')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Check staging secrets
@@ -68,6 +78,7 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_TAG: ${{ github.event.inputs.image_tag || 'latest' }}
         run: |
           mkdir -p ~/.ssh
           echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
@@ -76,7 +87,7 @@ jobs:
           # GHCR images from workflows are private by default; the box logs
           # in with this run's ephemeral token — no stored registry creds.
           echo "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" \
-            "docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
+            "export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
       - name: Skipped (no staging secrets yet)
         if: steps.gate.outputs.ready != 'true'
         # YAML treats a space+# inside a plain scalar as a comment — keep
