@@ -43,6 +43,13 @@
       "when": 1784299160633,
       "tag": "0005_mighty_purple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784304947679,
+      "tag": "0006_late_richard_fisk",
+      "breakpoints": true
     }
   ]
 }
