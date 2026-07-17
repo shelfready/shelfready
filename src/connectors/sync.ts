@@ -40,9 +40,9 @@ export async function getSourceCredentials<T = unknown>(
 }
 
 /**
- * Full sync pipeline: connector stream → canonical validation → scoped
- * upsert, recorded as a feed_runs row. Rejected items never touch the
- * catalog; their issues are captured (capped) in the run's stats.
+ * Pull-style sync: resolve the source's connector, stream its items
+ * through the pipeline. Push-style sources (CSV upload) call
+ * runSyncItems directly with parsed rows instead.
  */
 export async function runSync(
   db: AnyDb,
@@ -58,6 +58,29 @@ export async function runSync(
     ? decryptJson(source.credentialsEnc)
     : null;
 
+  return runSyncItems(
+    db,
+    merchantId,
+    sourceId,
+    connector.fetchProducts({ config: source.config, credentials }),
+  );
+}
+
+/**
+ * The pipeline: items → canonical validation → scoped upsert, recorded
+ * as a feed_runs row. Rejected items never touch the catalog; their
+ * issues are captured (capped) in the run's stats.
+ */
+export async function runSyncItems(
+  db: AnyDb,
+  merchantId: string,
+  sourceId: string,
+  items: AsyncIterable<unknown> | Iterable<unknown>,
+): Promise<{ runId: string; stats: SyncStats }> {
+  const scope = forMerchant(db, merchantId);
+  const source = await scope.sources.getById(sourceId);
+  if (!source) throw new Error(`source ${sourceId} not found for merchant`);
+
   const [run] = await scope.feedRuns.insert([
     { sourceId, kind: "sync", status: "running" },
   ]);
@@ -71,10 +94,7 @@ export async function runSync(
   };
 
   try {
-    for await (const raw of connector.fetchProducts({
-      config: source.config,
-      credentials,
-    })) {
+    for await (const raw of items) {
       stats.seen++;
       const { product, issues } = validateProduct(raw);
       stats.warnings += issues.filter((i) => i.severity === "warning").length;
