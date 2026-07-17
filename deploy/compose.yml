@@ -42,6 +42,43 @@ services:
       postgres:
         condition: service_healthy
 
+  # Production app: tag-pinned image, own database, own env (issue #76).
+  app-prod:
+    image: ghcr.io/shelfready/shelfready:${PROD_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      DATABASE_URL: postgres://shelfready:${POSTGRES_PASSWORD}@postgres:5432/shelfready_prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "3000"
+
+  migrate-prod:
+    image: ghcr.io/shelfready/shelfready-migrate:${PROD_IMAGE_TAG:-latest}
+    profiles: ["ops"]
+    env_file: .env.prod
+    environment:
+      DATABASE_URL: postgres://shelfready:${POSTGRES_PASSWORD}@postgres:5432/shelfready_prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Privacy-friendly analytics (postgres-only; ClickHouse-based options
+  # don't fit the box).
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://shelfready:${POSTGRES_PASSWORD}@postgres:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?set in deploy/.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "3000"
+
   # Daily pg_dump with 14-day local retention (ADR-0008). Offsite copies
   # to R2 + restore drill are a pre-launch requirement: issue #37.
   backup:

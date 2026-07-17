@@ -18,6 +18,11 @@ on:
         description: "Image tag to deploy (commit sha or latest)"
         default: latest
         required: true
+      target:
+        description: "Deploy target"
+        type: choice
+        default: staging
+        options: [staging, prod]
 
 permissions:
   contents: read
@@ -66,6 +71,7 @@ jobs:
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && needs.build.result == 'success')) }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Check staging secrets
         id: gate
         env:
@@ -79,6 +85,7 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_TAG: ${{ github.event.inputs.image_tag || 'latest' }}
+          TARGET: ${{ github.event.inputs.target || 'staging' }}
         run: |
           mkdir -p ~/.ssh
           echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
@@ -86,8 +93,15 @@ jobs:
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           # GHCR images from workflows are private by default; the box logs
           # in with this run's ephemeral token — no stored registry creds.
-          echo "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" \
-            "export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
+          # Sync deploy files so compose/Caddyfile changes reach the box.
+          scp -i ~/.ssh/deploy_key -q deploy/compose.yml deploy/Caddyfile deploy/prod-bootstrap.sh "$VPS_USER@$VPS_HOST:~/shelfready/"
+          if [ "$TARGET" = "prod" ]; then
+            ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" "sh ~/shelfready/prod-bootstrap.sh"
+            REMOTE="export PROD_IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate-prod && docker compose up -d app-prod umami caddy && docker logout ghcr.io"
+          else
+            REMOTE="export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
+          fi
+          echo "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" "$REMOTE"
       - name: Skipped (no staging secrets yet)
         if: steps.gate.outputs.ready != 'true'
         # YAML treats a space+# inside a plain scalar as a comment — keep
