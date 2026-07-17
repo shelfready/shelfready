@@ -2,6 +2,7 @@ import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
 import { UploadFlow } from "./upload";
+import { ConnectWoo, SyncNowButton } from "./connect-woo";
 
 export default async function SourcesPage() {
   const { merchant } = await requireMerchant();
@@ -26,6 +27,7 @@ export default async function SourcesPage() {
                 <td>{s.name}</td>
                 <td>{s.type}</td>
                 <td>{s.lastSyncAt ? new Date(s.lastSyncAt).toISOString() : "never"}</td>
+                <td>{s.type !== "csv" && <SyncNowButton sourceId={s.id} />}</td>
               </tr>
             ))}
           </tbody>
@@ -33,6 +35,12 @@ export default async function SourcesPage() {
       )}
       <h2>Upload a CSV / XLSX catalog</h2>
       <UploadFlow />
+      <h2 style={{ marginTop: 32 }}>Connect a WooCommerce store</h2>
+      <p>
+        Create a read-only REST API key in WooCommerce → Settings → Advanced →
+        REST API, then connect it here. Credentials are encrypted at rest.
+      </p>
+      <ConnectWoo />
     </main>
   );
 }
