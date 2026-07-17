@@ -6,6 +6,11 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+# Migration stage — full deps + drizzle files, run on the box against the
+# compose-network Postgres (ADR-0008): compose --profile ops run migrate
+FROM builder AS migrate
+CMD ["npx", "tsx", "scripts/db-migrate.ts"]
+
 # Runtime stage — only the standalone server + assets
 FROM node:22-alpine AS runner
 WORKDIR /app

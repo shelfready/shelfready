@@ -37,31 +37,31 @@ jobs:
             ghcr.io/shelfready/shelfready:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: migrate
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ghcr.io/shelfready/shelfready-migrate:latest
+            ghcr.io/shelfready/shelfready-migrate:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-  # Migrations + deploy activate once the staging secrets exist; until
-  # then they no-op cleanly so main stays green pre-VPS (issue #7).
+  # Deploy activates once the VPS secrets exist; until then it no-ops
+  # cleanly so main stays green pre-VPS (issue #7). Migrations run ON the
+  # box via the migrate image — CI holds no DB credentials (ADR-0008).
   deploy:
     needs: build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Check staging secrets
         id: gate
         env:
-          HAS: ${{ secrets.VPS_SSH_KEY != '' && secrets.DATABASE_URL != '' }}
+          HAS: ${{ secrets.VPS_SSH_KEY != '' }}
         run: echo "ready=$HAS" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-node@v4
-        if: steps.gate.outputs.ready == 'true'
-        with:
-          node-version: 22
-          cache: npm
-      - name: Run migrations against Neon
-        if: steps.gate.outputs.ready == 'true'
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npm ci && npm run db:migrate
-      - name: Deploy over SSH
+      - name: Deploy over SSH (pull, migrate, up)
         if: steps.gate.outputs.ready == 'true'
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -73,7 +73,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" \
-            "cd ~/shelfready && docker compose pull && docker compose up -d"
+            "cd ~/shelfready && docker compose pull && docker compose --profile ops run --rm migrate && docker compose up -d"
       - name: Skipped (no staging secrets yet)
         if: steps.gate.outputs.ready != 'true'
         # YAML treats a space+# inside a plain scalar as a comment — keep
