@@ -16,6 +16,16 @@ export const syncScheduler = inngest.createFunction(
   },
 );
 
+/** Deliver due webhook payloads (pending + retry backlog). */
+export const webhookDeliverer = inngest.createFunction(
+  { id: "webhook-deliverer", triggers: [cron("*/5 * * * *")] },
+  async () => {
+    const { getDb } = await import("@/db");
+    const { deliverPending } = await import("@/webhooks/deliver");
+    return deliverPending(getDb());
+  },
+);
+
 /** Daily drift check per merchant, with owner email digests. */
 export const driftChecker = inngest.createFunction(
   { id: "drift-checker", triggers: [cron("30 5 * * *")] },

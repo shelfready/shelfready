@@ -119,6 +119,10 @@ export async function renderFeeds(db: AnyDb, merchantId: string) {
       artifactKeys: artifacts,
       finishedAt: new Date(),
     });
+    const { emitEvent, kickDelivery } = await import("@/webhooks/deliver");
+    if ((await emitEvent(db, merchantId, "feeds.rendered", { run_id: run.id, stats })) > 0) {
+      kickDelivery(db);
+    }
     return { runId: run.id, stats };
   } catch (error) {
     await scope.feedRuns.update(run.id, {
