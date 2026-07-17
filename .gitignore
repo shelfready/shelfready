@@ -19,6 +19,8 @@ dist/
 .vercel/
 .inngest/
 
+# local artifacts + dev database
+.artifacts/
 # local dev database (scripts/db-dev.ts)
 .pglite/
 
