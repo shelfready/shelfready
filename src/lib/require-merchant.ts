@@ -7,7 +7,7 @@ import { auth } from "@/auth";
  */
 export async function requireMerchant() {
   const session = await auth();
-  if (!session?.user) redirect("/api/auth/signin");
+  if (!session?.user) redirect("/login");
   if (!session.activeMerchant) {
     // Should not happen (createUser provisions); fail loud rather than
     // render a tenant-less dashboard.

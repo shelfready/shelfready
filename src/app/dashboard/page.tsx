@@ -2,58 +2,108 @@ import Link from "next/link";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
+import { Badge, Button, Card, EmptyState, PageHeader } from "@/components/ui";
+
+const AVAILABILITY_TONE: Record<string, "success" | "danger" | "warning" | "neutral"> = {
+  in_stock: "success",
+  out_of_stock: "danger",
+  pre_order: "warning",
+  backorder: "warning",
+  unknown: "neutral",
+};
 
 export default async function DashboardPage() {
-  const { session, merchant } = await requireMerchant();
+  const { merchant } = await requireMerchant();
   const scope = forMerchant(getDb(), merchant.merchantId);
-  const products = await scope.products.list();
+  const [products, sources] = await Promise.all([
+    scope.products.list(),
+    scope.sources.list(),
+  ]);
+
+  const withGtin = products.filter((p) => p.gtin).length;
 
   return (
-    <main style={{ padding: "48px 24px", maxWidth: 900, margin: "0 auto" }}>
-      <h1>{merchant.name}</h1>
-      <p>
-        Signed in as {session.user?.email} · role: {merchant.role} · merchant{" "}
-        <code>{merchant.slug}</code>
-      </p>
-      <p>
-        <Link href="/dashboard/sources">Catalog sources & upload →</Link>
-      </p>
+    <>
+      <PageHeader
+        title="Dashboard"
+        description="Your catalog at a glance."
+        action={
+          <Link href="/dashboard/sources">
+            <Button variant="secondary" size="sm">
+              Manage sources
+            </Button>
+          </Link>
+        }
+      />
 
-      <h2>Products ({products.length})</h2>
       {products.length === 0 ? (
-        <p>
-          No products yet — <Link href="/dashboard/sources">upload a catalog</Link>.
-        </p>
+        <EmptyState
+          title="No products yet"
+          description="Upload a CSV/XLSX catalog or connect your WooCommerce store — products land here validated and ready for AI-surface feeds."
+          action={
+            <Link href="/dashboard/sources">
+              <Button>Add your catalog</Button>
+            </Link>
+          }
+        />
       ) : (
-        <table cellPadding={6}>
-          <thead>
-            <tr>
-              <th align="left">SKU</th>
-              <th align="left">Title</th>
-              <th align="left">Brand</th>
-              <th align="right">Price</th>
-              <th align="left">Availability</th>
-              <th align="left">GTIN</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.slice(0, 100).map((p) => (
-              <tr key={p.id}>
-                <td><code>{p.externalId}</code></td>
-                <td>{p.title ?? "—"}</td>
-                <td>{p.brand ?? "—"}</td>
-                <td align="right">
-                  {p.priceMinor != null
-                    ? `${(p.priceMinor / 100).toFixed(2)} ${p.currency ?? ""}`
-                    : "—"}
-                </td>
-                <td>{p.availability}</td>
-                <td>{p.gtin ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <>
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Card>
+              <p className="text-sm text-slate-500">Products</p>
+              <p className="mt-1 text-2xl font-semibold">{products.length}</p>
+            </Card>
+            <Card>
+              <p className="text-sm text-slate-500">With GTIN</p>
+              <p className="mt-1 text-2xl font-semibold">
+                {withGtin}
+                <span className="ml-1 text-sm font-normal text-slate-400">
+                  / {products.length}
+                </span>
+              </p>
+            </Card>
+            <Card>
+              <p className="text-sm text-slate-500">Sources</p>
+              <p className="mt-1 text-2xl font-semibold">{sources.length}</p>
+            </Card>
+          </div>
+
+          <Card className="overflow-x-auto p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-3">SKU</th>
+                  <th className="px-4 py-3">Title</th>
+                  <th className="px-4 py-3">Brand</th>
+                  <th className="px-4 py-3 text-right">Price</th>
+                  <th className="px-4 py-3">Availability</th>
+                  <th className="px-4 py-3">GTIN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.slice(0, 100).map((p) => (
+                  <tr key={p.id} className="border-b border-slate-100 last:border-0">
+                    <td className="px-4 py-2.5 font-mono text-xs">{p.externalId}</td>
+                    <td className="max-w-64 truncate px-4 py-2.5">{p.title ?? "—"}</td>
+                    <td className="px-4 py-2.5">{p.brand ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums">
+                      {p.priceMinor != null
+                        ? `${(p.priceMinor / 100).toFixed(2)} ${p.currency ?? ""}`
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge tone={AVAILABILITY_TONE[p.availability] ?? "neutral"}>
+                        {p.availability.replace("_", " ")}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs">{p.gtin ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </>
       )}
-    </main>
+    </>
   );
 }
