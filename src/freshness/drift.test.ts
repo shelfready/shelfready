@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { like, and, eq } from "drizzle-orm";
 import { createTestDb, type TestDb } from "@/db/test-db";
 import { createTwoTenants } from "@/db/test-tenants";
-import { auditFindings, products } from "@/db/schema";
+import { auditFindings } from "@/db/schema";
 import { compareDrift, extractProductFromPage, runDriftCheck } from "./drift";
 
 let db: TestDb;

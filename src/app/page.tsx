@@ -141,9 +141,9 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Link href="/login"><Button>Start free — 25 SKUs</Button></Link>
-            <a href="#how" className="text-sm font-medium text-brand-700 hover:underline">
-              See how it works ↓
-            </a>
+            <Link href="/demo" className="text-sm font-medium text-brand-700 hover:underline">
+              Try the live demo →
+            </Link>
           </div>
           <p className="text-xs text-slate-400">
             No credit card. Feed URLs live in five minutes.
