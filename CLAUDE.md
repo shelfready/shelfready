@@ -18,7 +18,7 @@ Make any non-Shopify store shoppable/discoverable by AI shopping agents: spec-co
 Pre-code — this section grows as M0 lands. Planned shape (ADR-0002):
 
 - `src/app/` — Next.js App Router: dashboard + API routes. Self-hosted: Docker image (standalone output) on a netcup VPS behind Cloudflare — no Vercel-only APIs anywhere (ADR-0005).
-- `src/db/` — Drizzle schema + migrations. Core tables: `merchants` (tenants), `users`/`memberships`, `sources` (connector configs, encrypted creds), `products`, `variants`, `feed_runs`, `audit_findings`.
+- `src/db/` — Drizzle schema + migrations (`drizzle/`, via `npm run db:generate|db:migrate|db:seed`). Core tables: `merchants` (tenants), `users`/`memberships`, `sources` (connector configs, encrypted creds), `products`, `variants`, `feed_runs`, `audit_findings`. Prices are integer minor units + ISO-4217; `availability` is the ACP enum. DB tests run against **PGlite** (in-process Postgres) via `src/db/test-db.ts` — no Docker needed.
 - `src/connectors/` — one thin plugin interface (`fetchProducts()`, `watchInventory()`); implementations: CSV/XLSX upload → WooCommerce → BigCommerce → Magento → generic feed-URL importer. See ADR-0003.
 - `src/feeds/` — canonical product model → per-surface feed renderers (ACP CSV/JSON, GMC, JSON-LD). Artifacts rendered to Cloudflare R2, served via signed CDN-cached URLs. See ADR-0004.
 - `src/audit/` — rules engine → per-SKU + catalog agent-readiness score + findings.
