@@ -76,8 +76,48 @@ function scoped<T extends TenantTable>(
 export function forMerchant(db: AnyDb, merchantId: string) {
   return {
     merchantId,
-    products: scoped(db, merchantId, products),
-    variants: scoped(db, merchantId, variants),
+    products: {
+      ...scoped(db, merchantId, products),
+      /** Sync upsert keyed on (source_id, external_id). */
+      upsertByExternalId: async (
+        sourceId: string,
+        values: Omit<
+          typeof products.$inferInsert,
+          "merchantId" | "sourceId" | "id"
+        >,
+      ) => {
+        const [row] = await db
+          .insert(products)
+          .values({ ...values, merchantId, sourceId })
+          .onConflictDoUpdate({
+            target: [products.sourceId, products.externalId],
+            set: { ...values, merchantId, updatedAt: new Date() },
+          })
+          .returning();
+        return row;
+      },
+    },
+    variants: {
+      ...scoped(db, merchantId, variants),
+      /** Sync upsert keyed on (product_id, external_id). */
+      upsertByExternalId: async (
+        productId: string,
+        values: Omit<
+          typeof variants.$inferInsert,
+          "merchantId" | "productId" | "id"
+        >,
+      ) => {
+        const [row] = await db
+          .insert(variants)
+          .values({ ...values, merchantId, productId })
+          .onConflictDoUpdate({
+            target: [variants.productId, variants.externalId],
+            set: { ...values, merchantId, updatedAt: new Date() },
+          })
+          .returning();
+        return row;
+      },
+    },
     sources: scoped(db, merchantId, sources),
     feedRuns: scoped(db, merchantId, feedRuns),
     auditFindings: scoped(db, merchantId, auditFindings),

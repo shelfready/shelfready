@@ -152,9 +152,9 @@ export const sources = pgTable(
     type: text("type").notNull(),
     name: text("name").notNull(),
     config: jsonb("config").notNull().default({}),
-    // AES-GCM ciphertext, never plaintext.
-    // TODO(#9): encryption helper lands with the connector interface;
-    // nothing writes this column until then.
+    // AES-256-GCM ciphertext, never plaintext — written only via
+    // setSourceCredentials (src/connectors/sync.ts, helpers in
+    // src/lib/crypto.ts).
     credentialsEnc: text("credentials_enc"),
     enabled: boolean("enabled").notNull().default(true),
     lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
