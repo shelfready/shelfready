@@ -87,7 +87,7 @@ jobs:
           # GHCR images from workflows are private by default; the box logs
           # in with this run's ephemeral token — no stored registry creds.
           echo "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" \
-            "export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
+            "export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
       - name: Skipped (no staging secrets yet)
         if: steps.gate.outputs.ready != 'true'
         # YAML treats a space+# inside a plain scalar as a comment — keep
