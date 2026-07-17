@@ -55,7 +55,17 @@ export const merchants = pgTable("merchants", {
   plan: text("plan").notNull().default("free"),
   // Entitlement flags driven by Stripe webhooks (M0 billing scaffold).
   entitlements: jsonb("entitlements").notNull().default({}),
+  stripeCustomerId: text("stripe_customer_id").unique(),
   ...timestamps,
+});
+
+// Processed Stripe webhook event ids — replayed events become no-ops.
+export const stripeEvents = pgTable("stripe_events", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // Kept Auth.js-adapter-compatible; accounts/sessions tables land with #3.
