@@ -66,10 +66,15 @@ export async function POST(req: Request) {
   }
 
   // Reuse or create the csv source; the mapping persists for re-uploads.
-  let source =
-    typeof sourceId === "string" && sourceId
-      ? await scope.sources.getById(sourceId)
-      : null;
+  let source = null;
+  if (typeof sourceId === "string" && sourceId) {
+    source = await scope.sources.getById(sourceId);
+    // Unknown or another tenant's id — identical 404 either way (no
+    // exists-but-forbidden oracle).
+    if (!source) {
+      return NextResponse.json({ error: "source not found" }, { status: 404 });
+    }
+  }
   if (source && source.type !== "csv") {
     return NextResponse.json({ error: "not a csv source" }, { status: 400 });
   }
