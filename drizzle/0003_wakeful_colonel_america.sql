@@ -1,0 +1,1 @@
+ALTER TABLE "merchants" ADD COLUMN "settings" jsonb DEFAULT '{}'::jsonb NOT NULL;

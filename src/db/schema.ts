@@ -56,6 +56,9 @@ export const merchants = pgTable("merchants", {
   // Entitlement flags driven by Stripe webhooks (M0 billing scaffold).
   entitlements: jsonb("entitlements").notNull().default({}),
   stripeCustomerId: text("stripe_customer_id").unique(),
+  // Seller-level feed fields (ADR-0009): seller_name, seller_url,
+  // store_country — attached at feed render, not per product.
+  settings: jsonb("settings").notNull().default({}),
   ...timestamps,
 });
 
