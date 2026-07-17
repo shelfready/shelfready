@@ -32,6 +32,7 @@ export async function processStripeEvent(db: AnyDb, event: Stripe.Event) {
       }
       break;
     }
+    case "customer.subscription.created":
     case "customer.subscription.updated": {
       const sub = event.data.object;
       const plan = sub.metadata?.plan;
