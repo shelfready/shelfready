@@ -80,6 +80,8 @@ export const users = pgTable("users", {
   name: text("name"),
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   image: text("image"),
+  // scrypt hash (src/lib/password.ts); null for magic-link/OAuth-only users
+  passwordHash: text("password_hash"),
   ...timestamps,
 });
 
