@@ -257,6 +257,42 @@ export const feedRuns = pgTable(
   (t) => [index("feed_runs_merchant_idx").on(t.merchantId)],
 );
 
+export const proposalStatusEnum = pgEnum("proposal_status", [
+  "pending",
+  "approved",
+  "rejected",
+  "applied",
+]);
+
+// Claude enrichment proposals (issue #19) — human-in-the-loop: nothing
+// touches the catalog until a proposal is approved and applied.
+export const enrichmentProposals = pgTable(
+  "enrichment_proposals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    merchantId: uuid("merchant_id")
+      .notNull()
+      .references(() => merchants.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    field: text("field").notNull(), // 'description' | 'brand' | 'title'
+    currentValue: text("current_value"),
+    proposedValue: text("proposed_value").notNull(),
+    rationale: text("rationale"),
+    // sha256 of the product's relevant current values — dedupes repeat
+    // enrichment runs against unchanged content.
+    valueHash: text("value_hash").notNull(),
+    status: proposalStatusEnum("status").notNull().default("pending"),
+    runId: uuid("run_id"),
+    ...timestamps,
+  },
+  (t) => [
+    index("enrichment_proposals_merchant_idx").on(t.merchantId),
+    index("enrichment_proposals_product_idx").on(t.productId),
+  ],
+);
+
 export const auditFindings = pgTable(
   "audit_findings",
   {

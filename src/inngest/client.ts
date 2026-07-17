@@ -9,3 +9,7 @@ export const demoEchoEvent = eventType("demo/echo", {
 export const syncRequestedEvent = eventType("source/sync.requested", {
   schema: staticSchema<{ merchantId: string; sourceId: string }>(),
 });
+
+export const enrichmentRequestedEvent = eventType("enrichment/requested", {
+  schema: staticSchema<{ merchantId: string }>(),
+});
