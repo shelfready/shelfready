@@ -45,6 +45,7 @@ services:
   # Production app: tag-pinned image, own database, own env (issue #76).
   app-prod:
     image: ghcr.io/shelfready/shelfready:${PROD_IMAGE_TAG:-latest}
+    profiles: ["prod"]
     restart: unless-stopped
     env_file: .env.prod
     environment:
@@ -69,10 +70,11 @@ services:
   # don't fit the box).
   umami:
     image: ghcr.io/umami-software/umami:postgresql-latest
+    profiles: ["prod"]
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://shelfready:${POSTGRES_PASSWORD}@postgres:5432/umami
-      APP_SECRET: ${UMAMI_APP_SECRET:?set in deploy/.env}
+      APP_SECRET: ${UMAMI_APP_SECRET:-set-me}
     depends_on:
       postgres:
         condition: service_healthy

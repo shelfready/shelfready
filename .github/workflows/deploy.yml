@@ -95,9 +95,9 @@ jobs:
           # in with this run's ephemeral token — no stored registry creds.
           # Sync deploy files so compose/Caddyfile changes reach the box.
           scp -i ~/.ssh/deploy_key -q deploy/compose.yml deploy/Caddyfile deploy/prod-bootstrap.sh "$VPS_USER@$VPS_HOST:~/shelfready/"
+          ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" "sh ~/shelfready/prod-bootstrap.sh"
           if [ "$TARGET" = "prod" ]; then
-            ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" "sh ~/shelfready/prod-bootstrap.sh"
-            REMOTE="export PROD_IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate-prod && docker compose up -d app-prod umami caddy && docker logout ghcr.io"
+            REMOTE="export PROD_IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile prod --profile ops pull -q && docker compose --profile prod --profile ops run --rm migrate-prod && docker compose --profile prod up -d app-prod umami caddy && docker logout ghcr.io"
           else
             REMOTE="export IMAGE_TAG='$IMAGE_TAG' && docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose --profile ops pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
           fi
