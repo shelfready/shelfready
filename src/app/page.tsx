@@ -108,6 +108,10 @@ function SectionTitle({ eyebrow, title, sub }: { eyebrow: string; title: string;
 export default function Home() {
   return (
     <main className="bg-slate-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "ShelfReady", "applicationCategory": "BusinessApplication", "operatingSystem": "Web", "url": "https://useshelfready.com", "description": "Compliant product feeds, agent-readiness audits, Claude-powered catalog enrichment and freshness monitoring for AI shopping surfaces.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free tier: 25 SKUs with hosted feeds and audit"}}).replace(/</g, "\\u003c") }}
+      />
       {/* Nav */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
