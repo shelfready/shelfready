@@ -4,6 +4,7 @@ import { requireMerchant } from "@/lib/require-merchant";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { UploadFlow } from "./upload";
 import { ConnectWoo, SyncNowButton } from "./connect-woo";
+import { ConnectFeed } from "./connect-feed";
 
 export default async function SourcesPage() {
   const { merchant } = await requireMerchant();
@@ -65,6 +66,14 @@ export default async function SourcesPage() {
             Settings → Advanced → REST API. Credentials are encrypted at rest.
           </p>
           <ConnectWoo />
+        </Card>
+        <Card>
+          <h2 className="mb-1 text-base font-semibold">Import from a feed URL</h2>
+          <p className="mb-4 text-sm text-slate-500">
+            Already publish a Google Shopping XML or CSV feed? Point us at it —
+            works with any cart, re-synced automatically every 6 hours.
+          </p>
+          <ConnectFeed />
         </Card>
       </div>
     </>

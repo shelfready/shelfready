@@ -4,6 +4,7 @@ import { requireMerchant } from "@/lib/require-merchant";
 import { runSync } from "@/connectors/sync";
 import "@/connectors/csv";
 import "@/connectors/woocommerce";
+import "@/connectors/feed";
 
 /**
  * Manual pull-sync trigger. Runs inline for now; scheduled/durable syncs
