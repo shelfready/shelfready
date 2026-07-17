@@ -1,0 +1,25 @@
+# deps
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# build
+dist/
+*.tsbuildinfo
+
+# env & secrets — never commit
+.env
+.env.*
+!.env.example
+
+# vercel / inngest local state
+.vercel/
+.inngest/
+
+# misc
+coverage/
+*.log
+.DS_Store
