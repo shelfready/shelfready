@@ -13,9 +13,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShelfReady",
+  metadataBase: new URL("https://useshelfready.com"),
+  title: {
+    default: "ShelfReady — make your store shoppable by AI agents",
+    template: "%s · ShelfReady",
+  },
   description:
-    "Make any store shoppable and discoverable by AI shopping agents.",
+    "Compliant product feeds for ChatGPT, Google and Perplexity, an agent-readiness audit with a fix-first list, Claude-powered catalog enrichment, and freshness monitoring — for stores that aren't on Shopify.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "ShelfReady",
+    url: "https://useshelfready.com",
+    title: "ShelfReady — make your store shoppable by AI agents",
+    description:
+      "Feeds, audits, enrichment and monitoring for AI shopping surfaces. Free instant agent-readiness scan.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ShelfReady — make your store shoppable by AI agents",
+    description:
+      "Feeds, audits, enrichment and monitoring for AI shopping surfaces. Free instant agent-readiness scan.",
+  },
 };
 
 export default function RootLayout({
