@@ -1,14 +1,69 @@
-# Staging stack on the VPS (ADR-0005). Copy this directory to the box,
-# put real values in an untracked .env next to it, then:
+# Staging stack on the VPS (ADR-0005, ADR-0008). Copy this directory to
+# the box, put real values in an untracked .env next to it (at minimum
+# POSTGRES_PASSWORD + the app secrets), then:
 #   docker compose up -d
-# Rollback: IMAGE_TAG=<previous sha> docker compose up -d app
+# Migrations:  docker compose --profile ops run --rm migrate
+# Rollback:    IMAGE_TAG=<previous sha> docker compose up -d app
 services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shelfready
+      POSTGRES_USER: shelfready
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in deploy/.env}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shelfready -d shelfready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   app:
     image: ghcr.io/shelfready/shelfready:${IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file: .env
+    environment:
+      DATABASE_URL: postgres://shelfready:${POSTGRES_PASSWORD}@postgres:5432/shelfready
+    depends_on:
+      postgres:
+        condition: service_healthy
     expose:
       - "3000"
+
+  migrate:
+    image: ghcr.io/shelfready/shelfready-migrate:${IMAGE_TAG:-latest}
+    profiles: ["ops"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://shelfready:${POSTGRES_PASSWORD}@postgres:5432/shelfready
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Daily pg_dump with 14-day local retention (ADR-0008). Offsite copies
+  # to R2 + restore drill are a pre-launch requirement: issue #37.
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          pg_dump -h postgres -U shelfready -Fc shelfready \
+            > "/backups/shelfready-$$(date +%F).dump" \
+            && echo "backup ok $$(date +%F)"
+          find /backups -name '*.dump' -mtime +14 -delete
+          sleep 86400
+        done
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   caddy:
     image: caddy:2-alpine
@@ -22,5 +77,6 @@ services:
       - caddy_config:/config
 
 volumes:
+  pg_data:
   caddy_data:
   caddy_config:
