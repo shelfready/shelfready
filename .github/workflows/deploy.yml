@@ -61,19 +61,22 @@ jobs:
         env:
           HAS: ${{ secrets.VPS_SSH_KEY != '' }}
         run: echo "ready=$HAS" >> "$GITHUB_OUTPUT"
-      - name: Deploy over SSH (pull, migrate, up)
+      - name: Deploy over SSH (login, pull, migrate, up)
         if: steps.gate.outputs.ready == 'true'
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p ~/.ssh
           echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" \
-            "cd ~/shelfready && docker compose pull && docker compose --profile ops run --rm migrate && docker compose up -d"
+          # GHCR images from workflows are private by default; the box logs
+          # in with this run's ephemeral token — no stored registry creds.
+          echo "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" \
+            "docker login ghcr.io -u ${{ github.actor }} --password-stdin && cd ~/shelfready && docker compose pull -q && docker compose --profile ops run --rm migrate && docker compose up -d && docker logout ghcr.io"
       - name: Skipped (no staging secrets yet)
         if: steps.gate.outputs.ready != 'true'
         # YAML treats a space+# inside a plain scalar as a comment — keep
