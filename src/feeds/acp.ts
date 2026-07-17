@@ -1,6 +1,7 @@
 import type { products, variants } from "@/db/schema";
 import { isIsoCountry, isIsoCurrency } from "@/model/product";
 import { isValidGtin } from "@/lib/gtin";
+import { expandCatalog, type CatalogEntry } from "./expand";
 
 /**
  * OpenAI ACP feed renderer (ROADMAP §ACP, API version 2025-09-12).
@@ -83,26 +84,7 @@ export function formatPrice(priceMinor: number, currency: string): string {
   return (priceMinor / 100).toFixed(exponent);
 }
 
-interface ItemSource {
-  itemId: string;
-  groupId: string;
-  title: string | null;
-  description: string | null;
-  brand: string | null;
-  url: string | null;
-  imageUrl: string | null;
-  priceMinor: number | null;
-  currency: string | null;
-  availability: string;
-  gtin: string | null;
-  mpn: string | null;
-  color?: string | null;
-  size?: string | null;
-  sizeSystem?: string | null;
-  gender?: string | null;
-}
-
-function toItem(src: ItemSource, seller: SellerSettings): AcpItem {
+function toItem(src: CatalogEntry, seller: SellerSettings): AcpItem {
   const requiredPresent =
     !!src.title &&
     src.title.length <= 150 &&
@@ -147,74 +129,15 @@ function toItem(src: ItemSource, seller: SellerSettings): AcpItem {
 }
 
 /**
- * Products + their variants → ACP items. Simple products emit one row;
- * variable products emit one row per variant sharing group_id (variant
- * fields inherit product-level content where the variant lacks its own).
+ * Products + their variants → ACP items (expansion shared with the
+ * other surface renderers via expandCatalog).
  */
 export function buildAcpItems(
   rows: ProductRow[],
   variantRows: VariantRow[],
   seller: SellerSettings,
 ): AcpItem[] {
-  const variantsByProduct = new Map<string, VariantRow[]>();
-  for (const v of variantRows) {
-    const list = variantsByProduct.get(v.productId) ?? [];
-    list.push(v);
-    variantsByProduct.set(v.productId, list);
-  }
-
-  const items: AcpItem[] = [];
-  for (const p of rows) {
-    const vs = variantsByProduct.get(p.id) ?? [];
-    if (vs.length === 0) {
-      items.push(
-        toItem(
-          {
-            itemId: p.externalId,
-            groupId: p.externalId,
-            title: p.title,
-            description: p.description,
-            brand: p.brand,
-            url: p.url,
-            imageUrl: p.imageUrl,
-            priceMinor: p.priceMinor,
-            currency: p.currency,
-            availability: p.availability,
-            gtin: p.gtin,
-            mpn: p.mpn,
-          },
-          seller,
-        ),
-      );
-      continue;
-    }
-    for (const v of vs) {
-      items.push(
-        toItem(
-          {
-            itemId: v.externalId,
-            groupId: p.externalId,
-            title: v.title ?? p.title,
-            description: p.description,
-            brand: p.brand,
-            url: p.url,
-            imageUrl: p.imageUrl,
-            priceMinor: v.priceMinor ?? p.priceMinor,
-            currency: v.currency ?? p.currency,
-            availability: v.availability,
-            gtin: v.gtin,
-            mpn: v.mpn ?? p.mpn,
-            color: v.color,
-            size: v.size,
-            sizeSystem: v.sizeSystem,
-            gender: v.gender,
-          },
-          seller,
-        ),
-      );
-    }
-  }
-  return items;
+  return expandCatalog(rows, variantRows).map((entry) => toItem(entry, seller));
 }
 
 function csvEscape(value: string): string {
