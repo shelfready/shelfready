@@ -1,0 +1,5 @@
+# Local state holds the minted API key — never commit.
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl

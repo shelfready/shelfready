@@ -12,9 +12,8 @@ import {
 import { activeMerchantFor, provisionNewUser } from "@/lib/tenancy";
 
 const providers: Provider[] = [
-  // Email magic link. Dev transport logs the sign-in URL to the server
-  // console; a real transport (Resend) arrives with email infra.
-  // TODO(#30): real email transport for magic links + alerts.
+  // Email magic link via SMTPfast (infra/email/); dev fallback logs the
+  // URL to the server console when no key is configured.
   {
     id: "email",
     type: "email",
@@ -23,8 +22,18 @@ const providers: Provider[] = [
     maxAge: 24 * 60 * 60,
     options: {},
     async sendVerificationRequest({ identifier, url }) {
+      const { emailConfigured, sendEmail } = await import("@/lib/email");
+      if (emailConfigured()) {
+        await sendEmail({
+          to: identifier,
+          subject: "Sign in to ShelfReady",
+          text: `Sign in to ShelfReady:\n\n${url}\n\nThis link expires in 24 hours. If you didn't request it, ignore this email.`,
+          html: `<p>Sign in to <strong>ShelfReady</strong>:</p><p><a href="${url}">Click here to sign in</a></p><p style="color:#666">This link expires in 24 hours. If you didn't request it, ignore this email.</p>`,
+        });
+        return;
+      }
       if (process.env.NODE_ENV === "production") {
-        throw new Error("email transport not configured (TODO(#30))");
+        throw new Error("email transport not configured (SMTPFAST_API_KEY)");
       }
       console.log(`\n[auth] magic link for ${identifier}:\n${url}\n`);
     },
