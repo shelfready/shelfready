@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
+import { merchants } from "@/db/schema";
 import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
+import { sellerSettingsOf } from "@/feeds/render";
 import { Badge, Button, Card, EmptyState, PageHeader } from "@/components/ui";
+import { OnboardingChecklist } from "./onboarding";
 
 const AVAILABILITY_TONE: Record<string, "success" | "danger" | "warning" | "neutral"> = {
   in_stock: "success",
@@ -14,13 +18,23 @@ const AVAILABILITY_TONE: Record<string, "success" | "danger" | "warning" | "neut
 
 export default async function DashboardPage() {
   const { merchant } = await requireMerchant();
-  const scope = forMerchant(getDb(), merchant.merchantId);
-  const [products, sources] = await Promise.all([
+  const db = getDb();
+  const scope = forMerchant(db, merchant.merchantId);
+  const [products, sources, runs, [merchantRow]] = await Promise.all([
     scope.products.list(),
     scope.sources.list(),
+    scope.feedRuns.list(),
+    db.select().from(merchants).where(eq(merchants.id, merchant.merchantId)),
   ]);
 
   const withGtin = products.filter((p) => p.gtin).length;
+  const seller = sellerSettingsOf(merchantRow);
+  const onboarding = {
+    hasSource: sources.length > 0,
+    hasSellerSettings: Boolean(seller.sellerName && seller.sellerUrl && seller.storeCountry),
+    feedsRendered: runs.some((r) => r.kind === "render" && r.status === "succeeded"),
+    auditRun: runs.some((r) => r.kind === "audit" && r.status === "succeeded"),
+  };
 
   return (
     <>
@@ -35,6 +49,8 @@ export default async function DashboardPage() {
           </Link>
         }
       />
+
+      <OnboardingChecklist state={onboarding} />
 
       {products.length === 0 ? (
         <EmptyState
