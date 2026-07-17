@@ -10,17 +10,21 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/db-migrate.ts",
-    "db:seed": "tsx scripts/db-seed.ts"
+    "db:seed": "tsx scripts/db-seed.ts",
+    "db:dev": "tsx scripts/db-dev.ts"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.11.2",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.10",
+    "next-auth": "^5.0.0-beta.31",
     "pg": "^8.22.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.4",
+    "@electric-sql/pglite-socket": "^0.2.7",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
