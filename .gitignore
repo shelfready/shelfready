@@ -19,6 +19,9 @@ dist/
 .vercel/
 .inngest/
 
+# local dev database (scripts/db-dev.ts)
+.pglite/
+
 # misc
 coverage/
 *.log
