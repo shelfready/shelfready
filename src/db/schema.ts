@@ -322,6 +322,58 @@ export const auditFindings = pgTable(
   ],
 );
 
+export const webhooks = pgTable(
+  "webhooks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    merchantId: uuid("merchant_id")
+      .notNull()
+      .references(() => merchants.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    // AES-256-GCM ciphertext (src/lib/crypto.ts) — needed to sign
+    // deliveries, so encrypted rather than hashed; shown once at creation.
+    secretEnc: text("secret_enc").notNull(),
+    events: jsonb("events").notNull().default([]), // WebhookEvent[]
+    enabled: boolean("enabled").notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [index("webhooks_merchant_idx").on(t.merchantId)],
+);
+
+export const webhookDeliveryStatusEnum = pgEnum("webhook_delivery_status", [
+  "pending",
+  "succeeded",
+  "failed", // will retry
+  "dead", // retries exhausted
+]);
+
+export const webhookDeliveries = pgTable(
+  "webhook_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    merchantId: uuid("merchant_id")
+      .notNull()
+      .references(() => merchants.id, { onDelete: "cascade" }),
+    webhookId: uuid("webhook_id")
+      .notNull()
+      .references(() => webhooks.id, { onDelete: "cascade" }),
+    event: text("event").notNull(),
+    payload: jsonb("payload").notNull(),
+    status: webhookDeliveryStatusEnum("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    responseStatus: integer("response_status"),
+    lastError: text("last_error"),
+    ...timestamps,
+  },
+  (t) => [
+    index("webhook_deliveries_merchant_idx").on(t.merchantId),
+    index("webhook_deliveries_due_idx").on(t.status, t.nextAttemptAt),
+  ],
+);
+
 export const apiKeys = pgTable(
   "api_keys",
   {

@@ -75,6 +75,10 @@ export async function runAudit(
       stats,
       finishedAt: new Date(),
     });
+    const { emitEvent, kickDelivery } = await import("@/webhooks/deliver");
+    if ((await emitEvent(db, merchantId, "audit.completed", { run_id: run.id, ...stats })) > 0) {
+      kickDelivery(db);
+    }
     return { runId: run.id, audit };
   } catch (error) {
     await scope.feedRuns.update(run.id, {

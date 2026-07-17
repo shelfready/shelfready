@@ -50,6 +50,19 @@ function curlFor(method: string, path: string): string {
     }]
   }'`;
   }
+  if (path === "/api/v1/webhooks" && method === "post") {
+    return `curl -X POST ${base}${path}${auth} \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url": "https://yourapp.com/hooks/shelfready",
+    "events": ["sync.completed", "audit.completed"]
+  }'`;
+  }
+  if (path === "/api/v1/webhooks" && method === "delete") {
+    return `curl -X DELETE ${base}${path}${auth} \\
+  -H "Content-Type: application/json" \\
+  -d '{"id": "<uuid>"}'`;
+  }
   if (path === "/api/v1/syncs") {
     return `curl -X POST ${base}${path}${auth} \\
   -H "Content-Type: application/json" \\

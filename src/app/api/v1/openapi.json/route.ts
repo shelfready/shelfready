@@ -371,6 +371,123 @@ export const OPENAPI_DOCUMENT = {
         },
       },
     },
+    "/api/v1/webhooks": {
+      get: {
+        operationId: "listWebhooks",
+        summary: "List webhooks",
+        description:
+          "Registered webhook endpoints (signing secrets are never returned). Requires the `read` scope.",
+        responses: {
+          "200": {
+            description: "Webhook endpoints",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/Webhook" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          ...AUTH_RESPONSES,
+        },
+      },
+      post: {
+        operationId: "createWebhook",
+        summary: "Register a webhook",
+        description:
+          "Register an HTTPS endpoint for event deliveries. The response includes the signing `secret` **once** — verify each delivery's `X-ShelfReady-Signature` (`t=<unix ts>,v1=<hex HMAC-SHA256 of \"<ts>.<body>\">`). Failed deliveries retry after 1m/5m/30m/2h/12h, then stop. Requires the `write` scope.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["url", "events"],
+                properties: {
+                  url: { type: "string", format: "uri" },
+                  events: {
+                    type: "array",
+                    minItems: 1,
+                    items: {
+                      type: "string",
+                      enum: ["sync.completed", "feeds.rendered", "audit.completed"],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "The webhook, with its signing secret (shown once)",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      allOf: [
+                        { $ref: "#/components/schemas/Webhook" },
+                        {
+                          type: "object",
+                          properties: { secret: { type: "string" } },
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "400": errorResponse("Invalid body"),
+          ...AUTH_RESPONSES,
+        },
+      },
+      delete: {
+        operationId: "deleteWebhook",
+        summary: "Delete a webhook",
+        description: "Remove a webhook endpoint. Requires the `write` scope.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["id"],
+                properties: { id: { type: "string", format: "uuid" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Deleted",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "object",
+                      properties: { ok: { type: "boolean" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "404": errorResponse("Webhook not found"),
+          ...AUTH_RESPONSES,
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -462,6 +579,16 @@ export const OPENAPI_DOCUMENT = {
           stats: { type: "object" },
           started_at: { type: "string", format: "date-time" },
           finished_at: { type: ["string", "null"], format: "date-time" },
+        },
+      },
+      Webhook: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          url: { type: "string", format: "uri" },
+          events: { type: "array", items: { type: "string" } },
+          enabled: { type: "boolean" },
+          created_at: { type: "string", format: "date-time" },
         },
       },
       Finding: {

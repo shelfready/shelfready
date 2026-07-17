@@ -157,6 +157,16 @@ export async function runSyncItems(
     await renderFeedsSafely(db, merchantId);
     const { runAuditSafely } = await import("@/audit/run");
     await runAuditSafely(db, merchantId);
+    const { emitEvent, kickDelivery } = await import("@/webhooks/deliver");
+    if (
+      (await emitEvent(db, merchantId, "sync.completed", {
+        run_id: run.id,
+        source_id: sourceId,
+        stats: { ...stats, rejections: undefined },
+      })) > 0
+    ) {
+      kickDelivery(db);
+    }
     return { runId: run.id, stats };
   } catch (error) {
     await scope.feedRuns.update(run.id, {

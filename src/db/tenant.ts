@@ -9,6 +9,8 @@ import {
   products,
   sources,
   variants,
+  webhookDeliveries,
+  webhooks,
 } from "./schema";
 
 type AnyDb = ReturnType<typeof getDb> | TestDb;
@@ -121,6 +123,8 @@ export function forMerchant(db: AnyDb, merchantId: string) {
     },
     sources: scoped(db, merchantId, sources),
     apiKeys: scoped(db, merchantId, apiKeys),
+    webhooks: scoped(db, merchantId, webhooks),
+    webhookDeliveries: scoped(db, merchantId, webhookDeliveries),
     feedRuns: scoped(db, merchantId, feedRuns),
     auditFindings: {
       ...scoped(db, merchantId, auditFindings),
