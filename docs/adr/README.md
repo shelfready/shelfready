@@ -14,3 +14,4 @@ Template: **Context** (the forces), **Decision** (what we chose), **Consequences
 | [0006](0006-auth-authjs-v5.md) | Auth via Auth.js v5 (Drizzle adapter, database sessions) | Accepted |
 | [0007](0007-billing-model.md) | Billing: flat SKU-count tiers, webhook-driven entitlements | Accepted |
 | [0008](0008-self-hosted-postgres.md) | Self-hosted Postgres on the VPS instead of Neon | Accepted |
+| [0009](0009-canonical-product-model.md) | Canonical product model (ACP superset, zod, issue-shaped validation) | Accepted |
