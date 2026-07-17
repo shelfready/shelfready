@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -10,7 +11,9 @@ export default function Home() {
           compliant product feeds, an agent-readiness audit, catalog
           enrichment, and freshness monitoring.
         </p>
-        <p className={styles.status}>Pre-release · M0 Foundation in progress</p>
+        <p className={styles.status}>
+          Pre-release · <Link href="/dashboard">Sign in</Link>
+        </p>
       </main>
     </div>
   );
