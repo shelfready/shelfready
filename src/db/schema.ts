@@ -59,6 +59,8 @@ export const merchants = pgTable("merchants", {
   // Seller-level feed fields (ADR-0009): seller_name, seller_url,
   // store_country — attached at feed render, not per product.
   settings: jsonb("settings").notNull().default({}),
+  // Unguessable segment of the public feed URLs; rotatable (issue #16).
+  feedToken: text("feed_token").unique(),
   ...timestamps,
 });
 

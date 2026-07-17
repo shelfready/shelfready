@@ -29,6 +29,13 @@
       "when": 1784296638833,
       "tag": "0003_wakeful_colonel_america",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784297887075,
+      "tag": "0004_chief_shooting_star",
+      "breakpoints": true
     }
   ]
 }

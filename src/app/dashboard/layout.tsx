@@ -7,9 +7,9 @@ import { BrandMark, Button } from "@/components/ui";
 const NAV = [
   { href: "/dashboard", label: "Dashboard", enabled: true },
   { href: "/dashboard/sources", label: "Sources", enabled: true },
-  { href: "/dashboard/feeds", label: "Feeds", enabled: false },
+  { href: "/dashboard/feeds", label: "Feeds", enabled: true },
   { href: "/dashboard/audit", label: "Audit", enabled: false },
-  { href: "/dashboard/settings", label: "Settings", enabled: false },
+  { href: "/dashboard/settings", label: "Settings", enabled: true },
 ];
 
 export default async function DashboardLayout({
