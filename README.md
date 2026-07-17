@@ -27,10 +27,13 @@ Observability for server-side Claude calls is via [Otterscope](https://github.co
 
 ```sh
 npm install
-npm run dev        # Next.js dev server
+npm run db:dev     # local Postgres (PGlite behind a pg-wire socket, no Docker)
+npm run dev        # Next.js dev server (DATABASE_URL=postgres://postgres@localhost:5433/postgres)
 npm run build      # production build
 npm run lint       # eslint + tsc
 npm test           # vitest
 ```
+
+Background jobs run on [Inngest](https://www.inngest.com). Locally: `npx inngest-cli dev -u http://localhost:3112/api/inngest` (with `INNGEST_DEV=1` set for the app) and open http://localhost:8288 to inspect/trigger functions. Database migrations: `npm run db:generate` / `db:migrate` / `db:seed`.
 
 Contribution flow, quality gates, and working agreements: [docs/WORKFLOW.md](docs/WORKFLOW.md). Architectural decisions: [docs/adr/](docs/adr/).
