@@ -152,10 +152,11 @@ export async function runSyncItems(
       finishedAt: new Date(),
     });
     await scope.sources.update(sourceId, { lastSyncAt: new Date() });
-    // Feeds regenerate on sync (ADR-0004); render failure never fails
-    // the sync itself.
+    // Feeds + audit refresh on sync; their failures never fail the sync.
     const { renderFeedsSafely } = await import("@/feeds/render");
     await renderFeedsSafely(db, merchantId);
+    const { runAuditSafely } = await import("@/audit/run");
+    await runAuditSafely(db, merchantId);
     return { runId: run.id, stats };
   } catch (error) {
     await scope.feedRuns.update(run.id, {
