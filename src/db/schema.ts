@@ -321,3 +321,26 @@ export const auditFindings = pgTable(
     index("audit_findings_merchant_code_idx").on(t.merchantId, t.code),
   ],
 );
+
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    merchantId: uuid("merchant_id")
+      .notNull()
+      .references(() => merchants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    // First characters of the key ("sr_ab12cd34…") for display — the full
+    // key is shown once at creation and stored only as a sha256 hash.
+    prefix: text("prefix").notNull(),
+    keyHash: text("key_hash").notNull(),
+    scopes: jsonb("scopes").notNull().default(["read"]), // 'read' | 'write'
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    index("api_keys_merchant_idx").on(t.merchantId),
+    uniqueIndex("api_keys_hash_uq").on(t.keyHash),
+  ],
+);

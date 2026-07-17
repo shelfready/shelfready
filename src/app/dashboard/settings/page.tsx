@@ -1,10 +1,12 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { merchants } from "@/db/schema";
+import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
 import { sellerSettingsOf } from "@/feeds/render";
 import { Card, PageHeader } from "@/components/ui";
 import { SettingsForm, RotateTokenButton } from "./form";
+import { ApiKeysPanel } from "./api-keys";
 
 export default async function SettingsPage() {
   const { merchant } = await requireMerchant();
@@ -39,6 +41,27 @@ export default async function SettingsPage() {
             page afterwards.
           </p>
           <RotateTokenButton />
+        </Card>
+        <Card className="lg:col-span-2">
+          <h2 className="mb-1 text-base font-semibold">API keys</h2>
+          <p className="mb-4 text-sm text-slate-500">
+            Bearer keys for the REST API (<code className="font-mono">/api/v1</code>) —
+            catalog push, sync triggers, feed URLs, audit results. Keys are
+            hashed at rest and shown once at creation.
+          </p>
+          <ApiKeysPanel
+            initialKeys={(await forMerchant(getDb(), merchant.merchantId).apiKeys.list())
+              .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+              .map((k) => ({
+                id: k.id,
+                name: k.name,
+                prefix: k.prefix,
+                scopes: k.scopes as string[],
+                lastUsedAt: k.lastUsedAt?.toISOString() ?? null,
+                revokedAt: k.revokedAt?.toISOString() ?? null,
+                createdAt: k.createdAt.toISOString(),
+              }))}
+          />
         </Card>
       </div>
     </>

@@ -3,6 +3,7 @@ import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { getDb } from "./index";
 import type { TestDb } from "./test-db";
 import {
+  apiKeys,
   auditFindings,
   feedRuns,
   products,
@@ -119,6 +120,7 @@ export function forMerchant(db: AnyDb, merchantId: string) {
       },
     },
     sources: scoped(db, merchantId, sources),
+    apiKeys: scoped(db, merchantId, apiKeys),
     feedRuns: scoped(db, merchantId, feedRuns),
     auditFindings: {
       ...scoped(db, merchantId, auditFindings),
@@ -140,3 +142,31 @@ export function forMerchant(db: AnyDb, merchantId: string) {
 }
 
 export type MerchantScope = ReturnType<typeof forMerchant>;
+
+/**
+ * The public API's auth entry point — the only sanctioned cross-tenant
+ * read on api_keys: we don't know the merchant until the key resolves.
+ * Returns nothing for revoked keys; touches last_used_at on hit.
+ */
+export async function findMerchantByApiKeyHash(
+  db: AnyDb,
+  keyHash: string,
+): Promise<
+  | { merchantId: string; keyId: string; scopes: string[] }
+  | undefined
+> {
+  const [row] = await db
+    .select()
+    .from(apiKeys)
+    .where(eq(apiKeys.keyHash, keyHash));
+  if (!row || row.revokedAt) return undefined;
+  await db
+    .update(apiKeys)
+    .set({ lastUsedAt: new Date() })
+    .where(eq(apiKeys.id, row.id));
+  return {
+    merchantId: row.merchantId,
+    keyId: row.id,
+    scopes: (row.scopes as string[]) ?? [],
+  };
+}
