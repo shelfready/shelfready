@@ -38,6 +38,6 @@ Background jobs run on [Inngest](https://www.inngest.com). Locally: `npx inngest
 
 ## Deploy
 
-Merges to `main` build two Docker images (standalone Next.js app + a `migrate` image, see `Dockerfile`) pushed to GHCR (`latest` + commit sha), then — once the VPS secrets are configured — deploy over SSH: `docker compose pull`, run migrations on the box, `up -d` (`deploy/compose.yml`: app, Postgres 17 with daily `pg_dump` backups, Caddy TLS on `staging.useshelfready.com`; ADR-0008). Rollback: `IMAGE_TAG=<previous sha> docker compose up -d app` on the box. Required repo secrets: `VPS_SSH_KEY`, `VPS_HOST`, `VPS_USER` (no DB credentials in CI). CI (build/lint/test) remains the merge gate; deploy never gates PRs.
+Merges to `main` build two Docker images (standalone Next.js app + a `migrate` image, see `Dockerfile`) pushed to GHCR (`latest` + commit sha), then — once the VPS secrets are configured — deploy over SSH: `docker compose pull`, run migrations on the box, `up -d` (`deploy/compose.yml`: app, Postgres 17 with daily `pg_dump` backups, Caddy TLS on `staging.useshelfready.com`; ADR-0008). Rollback: `gh workflow run Deploy -f image_tag=<previous sha>` (or `IMAGE_TAG=<sha> docker compose up -d app` on the box if the image is present). Required repo secrets: `VPS_SSH_KEY`, `VPS_HOST`, `VPS_USER` (no DB credentials in CI). CI (build/lint/test) remains the merge gate; deploy never gates PRs.
 
 Contribution flow, quality gates, and working agreements: [docs/WORKFLOW.md](docs/WORKFLOW.md). Architectural decisions: [docs/adr/](docs/adr/).
