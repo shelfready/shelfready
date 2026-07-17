@@ -5,6 +5,7 @@ import { Badge, Card, PageHeader } from "@/components/ui";
 import { UploadFlow } from "./upload";
 import { ConnectWoo, SyncNowButton } from "./connect-woo";
 import { ConnectFeed } from "./connect-feed";
+import { ConnectBigCommerce } from "./connect-bigcommerce";
 
 export default async function SourcesPage() {
   const { merchant } = await requireMerchant();
@@ -74,6 +75,15 @@ export default async function SourcesPage() {
             works with any cart, re-synced automatically every 6 hours.
           </p>
           <ConnectFeed />
+        </Card>
+        <Card>
+          <h2 className="mb-1 text-base font-semibold">Connect BigCommerce</h2>
+          <p className="mb-4 text-sm text-slate-500">
+            Create a store-level API account (Settings → Store-level API
+            accounts) with <strong>read-only</strong> Products scope. The token
+            is encrypted at rest.
+          </p>
+          <ConnectBigCommerce />
         </Card>
       </div>
     </>

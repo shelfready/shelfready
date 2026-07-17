@@ -8,6 +8,7 @@ import { runDriftCheck } from "./drift";
 import "@/connectors/csv";
 import "@/connectors/woocommerce";
 import "@/connectors/feed";
+import "@/connectors/bigcommerce";
 
 type AnyDb = ReturnType<typeof getDb> | TestDb;
 

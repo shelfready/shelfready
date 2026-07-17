@@ -5,6 +5,7 @@ import { runSync } from "@/connectors/sync";
 import "@/connectors/csv";
 import "@/connectors/woocommerce";
 import "@/connectors/feed";
+import "@/connectors/bigcommerce";
 
 /**
  * Manual pull-sync trigger. Runs inline for now; scheduled/durable syncs
