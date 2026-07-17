@@ -8,7 +8,7 @@ Make any non-Shopify store shoppable/discoverable by AI shopping agents: spec-co
 
 - **Discovery-first.** The MVP is feeds + audit + enrichment + monitoring. **Never build or wire checkout / Shared-Payment-Token settlement** (merchant-of-record, tax/fraud/refund liability) without Kalin's explicit, in-the-moment go-ahead. See ADR-0001.
 - **Stripe stays in test mode** — test keys, test webhooks, test cards — until Kalin explicitly says otherwise. Never deploy billing to production or take a real payment without his go.
-- **Multi-tenant from day one.** Every query touching catalog data is scoped by tenant; every PR touching tenant-scoped code includes a test that tenant A cannot read/write tenant B's data.
+- **Multi-tenant from day one.** Tenant-owned tables (products, variants, sources, feed_runs, audit_findings) are touched **only** through `forMerchant(db, merchantId)` in `src/db/tenant.ts` — never via raw `db.select()/insert()/…`. Queries that outgrow the scoped accessors go in that module, next to the scope they must respect. Every PR touching tenant-scoped code includes an isolation test (harness: `createTwoTenants` in `src/db/test-tenants.ts`) that tenant A cannot read/write tenant B's data.
 - **Secrets:** never in the repo or any client-visible surface. Merchant platform API keys (connector credentials) are encrypted at rest, never logged, never sent to the client.
 - **Marketing honesty:** we promise "compliant + discoverable + fresh", never "we get you into ChatGPT" — OpenAI's merchant approval gate is theirs, not ours.
 - **Outward-facing actions** (production deploys, live payments, anything public) need Kalin's explicit go each time.
