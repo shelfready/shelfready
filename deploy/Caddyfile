@@ -4,3 +4,13 @@
 staging.useshelfready.com {
 	reverse_proxy app:3000
 }
+
+# Production — apex joins once the R2 custom-domain hijack is removed;
+# www works immediately (issue #76).
+useshelfready.com, www.useshelfready.com {
+	reverse_proxy app-prod:3000
+}
+
+analytics.useshelfready.com {
+	reverse_proxy umami:3000
+}
