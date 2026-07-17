@@ -12,3 +12,4 @@ Template: **Context** (the forces), **Decision** (what we chose), **Consequences
 | [0004](0004-feed-artifacts-on-object-storage.md) | Feed artifacts rendered to R2, served as signed CDN URLs | Accepted |
 | [0005](0005-self-host-app-on-vps.md) | Self-host the app on a VPS (netcup) instead of Vercel | Accepted |
 | [0006](0006-auth-authjs-v5.md) | Auth via Auth.js v5 (Drizzle adapter, database sessions) | Accepted |
+| [0007](0007-billing-model.md) | Billing: flat SKU-count tiers, webhook-driven entitlements | Accepted |
