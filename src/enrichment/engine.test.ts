@@ -10,7 +10,6 @@ import {
   reviewProposal,
   runEnrichment,
   setEnrichmentClient,
-  valueHashOf,
 } from "./engine";
 
 let db: TestDb;
