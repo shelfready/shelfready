@@ -319,6 +319,7 @@ export default function Home() {
           <div className="flex gap-5">
             <a href="#pricing" className="hover:text-slate-900">Pricing</a>
             <a href="#faq" className="hover:text-slate-900">FAQ</a>
+            <a href="/docs" className="hover:text-slate-900">API docs</a>
             <a href="mailto:support@useshelfready.com" className="hover:text-slate-900">Contact</a>
             <a href="https://github.com/shelfready/shelfready" className="hover:text-slate-900">GitHub</a>
           </div>
