@@ -76,4 +76,6 @@ jobs:
             "cd ~/shelfready && docker compose pull && docker compose up -d"
       - name: Skipped (no staging secrets yet)
         if: steps.gate.outputs.ready != 'true'
-        run: echo "Staging secrets not configured — build-only run (issue #7 part 2)."
+        # YAML treats a space+# inside a plain scalar as a comment — keep
+        # this message free of '#' or the run line gets truncated.
+        run: echo "Staging secrets not configured — build-only run (issue 7 part 2)."
