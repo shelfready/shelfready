@@ -9,6 +9,7 @@ import "@/connectors/csv";
 import "@/connectors/woocommerce";
 import "@/connectors/feed";
 import "@/connectors/bigcommerce";
+import "@/connectors/magento";
 
 type AnyDb = ReturnType<typeof getDb> | TestDb;
 

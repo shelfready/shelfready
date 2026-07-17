@@ -6,6 +6,7 @@ import { UploadFlow } from "./upload";
 import { ConnectWoo, SyncNowButton } from "./connect-woo";
 import { ConnectFeed } from "./connect-feed";
 import { ConnectBigCommerce } from "./connect-bigcommerce";
+import { ConnectMagento } from "./connect-magento";
 
 export default async function SourcesPage() {
   const { merchant } = await requireMerchant();
@@ -84,6 +85,15 @@ export default async function SourcesPage() {
             is encrypted at rest.
           </p>
           <ConnectBigCommerce />
+        </Card>
+        <Card>
+          <h2 className="mb-1 text-base font-semibold">Connect Magento / Adobe Commerce</h2>
+          <p className="mb-4 text-sm text-slate-500">
+            Create an integration (System → Extensions → Integrations) with
+            read-only <strong>Catalog</strong> scope and paste the access
+            token. Encrypted at rest.
+          </p>
+          <ConnectMagento />
         </Card>
       </div>
     </>

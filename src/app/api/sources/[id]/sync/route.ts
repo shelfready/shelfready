@@ -6,6 +6,7 @@ import "@/connectors/csv";
 import "@/connectors/woocommerce";
 import "@/connectors/feed";
 import "@/connectors/bigcommerce";
+import "@/connectors/magento";
 
 /**
  * Manual pull-sync trigger. Runs inline for now; scheduled/durable syncs
