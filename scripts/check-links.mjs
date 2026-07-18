@@ -11,8 +11,9 @@
 const base = process.argv[2] ?? "http://localhost:3000";
 
 const SEEDS = ["/", "/docs", "/status", "/login", "/register", "/reset"];
-// External hosts and non-page schemes are out of scope.
-const SKIP = /^(https?:\/\/(?!localhost)|mailto:|tel:|#)/;
+// External hosts, non-page schemes, and Cloudflare-injected paths
+// (email-protection rewrites of mailto: links) are out of scope.
+const SKIP = /^(https?:\/\/(?!localhost)|mailto:|tel:|#|\/cdn-cgi\/)/;
 // Binary/data endpoints where a 200 is all we assert (no HTML to crawl).
 const NO_PARSE = /\.(json|xml|csv|tsv|txt|png|jpg|svg|ico|webmanifest)$|^\/api\//;
 
