@@ -442,3 +442,50 @@ export const contactMessages = pgTable("contact_messages", {
   status: contactMessageStatusEnum("status").notNull().default("new"),
   ...timestamps,
 });
+
+// ---- Status page v2 (issue #120): components + incidents, managed ----
+// from the admin panel; automated heartbeat signals still degrade
+// components on their own so status never reports better than reality.
+
+export const statusComponents = pgTable("status_components", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  // Which automated signal drives this component when no incident is
+  // open: 'jobs' (heartbeat freshness) or null (manual/incident-only).
+  autoSignal: text("auto_signal"),
+  ...timestamps,
+});
+
+export const incidentSeverityEnum = pgEnum("incident_severity", [
+  "minor",
+  "major",
+  "critical",
+]);
+
+export const incidentStatusEnum = pgEnum("incident_status", [
+  "investigating",
+  "identified",
+  "monitoring",
+  "resolved",
+]);
+
+export const statusIncidents = pgTable("status_incidents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  severity: incidentSeverityEnum("severity").notNull(),
+  status: incidentStatusEnum("status").notNull().default("investigating"),
+  componentIds: jsonb("component_ids").notNull().default([]),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  ...timestamps,
+});
+
+export const statusIncidentUpdates = pgTable("status_incident_updates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  incidentId: uuid("incident_id")
+    .notNull()
+    .references(() => statusIncidents.id, { onDelete: "cascade" }),
+  status: incidentStatusEnum("status").notNull(),
+  body: text("body").notNull(),
+  ...timestamps,
+});

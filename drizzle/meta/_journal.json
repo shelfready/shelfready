@@ -85,6 +85,13 @@
       "when": 1784402292926,
       "tag": "0011_watery_firebrand",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1784402669569,
+      "tag": "0012_public_the_twelve",
+      "breakpoints": true
     }
   ]
 }
