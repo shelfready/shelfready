@@ -163,61 +163,66 @@ export function DashboardTopbar({
   const pathname = usePathname();
   const title = titles[pathname] ?? "Dashboard";
 
+  const switcher = (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted">
+            <span className="flex size-6 items-center justify-center rounded bg-primary text-xs font-semibold text-primary-foreground">
+              {initialsOf(merchant.name)}
+            </span>
+            <span className="max-w-40 truncate">{merchant.name}</span>
+            <ChevronsUpDown className="size-3.5 text-muted-foreground" />
+          </button>
+        }
+      />
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Stores</DropdownMenuLabel>
+          {merchants.map((m) => (
+            <DropdownMenuItem
+              key={m.merchantId}
+              onClick={() => {
+                if (m.merchantId !== merchant.merchantId) {
+                  void switchMerchant(m.merchantId);
+                }
+              }}
+            >
+              <span
+                className={cn(
+                  "flex size-5 items-center justify-center rounded text-[10px] font-semibold",
+                  m.merchantId === merchant.merchantId
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {initialsOf(m.name)}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{m.name}</span>
+              {m.merchantId === merchant.merchantId && (
+                <Check className="size-4 text-primary" />
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/dashboard/sources" />}>
+          <Plus className="size-4" />
+          Connect a store
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur sm:px-6">
+      {/* Mobile: multi-store users get the switcher; single-store, the logo. */}
       <div className="flex items-center gap-3 lg:hidden">
-        <Logo />
+        {merchants.length > 1 ? switcher : <Logo />}
       </div>
 
       <div className="hidden items-center gap-3 lg:flex">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <button className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-muted">
-                <span className="flex size-6 items-center justify-center rounded bg-primary text-xs font-semibold text-primary-foreground">
-                  {initialsOf(merchant.name)}
-                </span>
-                <span className="max-w-40 truncate">{merchant.name}</span>
-                <ChevronsUpDown className="size-3.5 text-muted-foreground" />
-              </button>
-            }
-          />
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Stores</DropdownMenuLabel>
-              {merchants.map((m) => (
-                <DropdownMenuItem
-                  key={m.merchantId}
-                  onClick={() => {
-                    if (m.merchantId !== merchant.merchantId) {
-                      void switchMerchant(m.merchantId);
-                    }
-                  }}
-                >
-                  <span
-                    className={cn(
-                      "flex size-5 items-center justify-center rounded text-[10px] font-semibold",
-                      m.merchantId === merchant.merchantId
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground",
-                    )}
-                  >
-                    {initialsOf(m.name)}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{m.name}</span>
-                  {m.merchantId === merchant.merchantId && (
-                    <Check className="size-4 text-primary" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/dashboard/sources" />}>
-              <Plus className="size-4" />
-              Connect a store
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {switcher}
         <span className="text-sm font-medium text-muted-foreground">{title}</span>
       </div>
 
@@ -253,6 +258,9 @@ export function DashboardTopbar({
               Billing
             </DropdownMenuItem>
             <DropdownMenuItem render={<Link href="/docs" />}>Documentation</DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard/support" />}>
+              Support
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => void signOutAction()}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>

@@ -22,3 +22,16 @@ jobs:
         run: npm run lint
       - name: Test
         run: npm test
+      # Crawl every internal href on the built site and fail on 4xx/5xx —
+      # the class of bug the v0 export shipped (footer links to nowhere).
+      - name: Link check
+        run: |
+          npx tsx scripts/db-dev.ts > db.log 2>&1 &
+          sleep 4
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+          DATABASE_URL=postgres://postgres:postgres@localhost:5433/postgres \
+            AUTH_SECRET=ci-link-check AUTH_URL=http://localhost:3000 PORT=3000 \
+            node .next/standalone/server.js > app.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/ > /dev/null && break; sleep 2; done
+          node scripts/check-links.mjs http://localhost:3000 || { tail -50 app.log db.log; exit 1; }

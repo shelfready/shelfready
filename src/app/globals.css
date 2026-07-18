@@ -128,7 +128,9 @@
   --brand-foreground: oklch(0.19 0.04 152);
   --brand-muted: oklch(0.3 0.05 152);
   --accent-amber: oklch(0.79 0.15 85);
-  --accent-amber-foreground: oklch(0.19 0.04 85);
+  /* Bright in dark mode: used as standalone warning text on dark cards and
+     on translucent amber badges — never on solid amber (indicator-only). */
+  --accent-amber-foreground: oklch(0.85 0.13 85);
 
   --sidebar: oklch(0.19 0.02 250);
   --sidebar-foreground: oklch(0.96 0.005 240);
@@ -192,19 +194,4 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* ------------------------------------------------------------------ */
-/* Transitional: legacy brand scale used by not-yet-ported pages.     */
-/* Remove with #99 once every page is on the semantic token system.   */
-/* ------------------------------------------------------------------ */
-@theme {
-  --color-brand-50: #f0fdf4;
-  --color-brand-100: #dcfce7;
-  --color-brand-200: #bbf7d0;
-  --color-brand-500: #22c55e;
-  --color-brand-600: #16a34a;
-  --color-brand-700: #15803d;
-  --color-brand-800: #166534;
-  --color-brand-900: #14532d;
 }

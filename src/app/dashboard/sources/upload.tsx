@@ -93,7 +93,7 @@ export function UploadFlow() {
       />
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
       {busy && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">

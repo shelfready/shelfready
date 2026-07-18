@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
 import { runSync } from "@/connectors/sync";
-import { apiError, requireApiKey } from "@/lib/api-auth";
+import { apiError, requireApiKey, withApiErrors } from "@/lib/api-auth";
 import "@/connectors/csv";
 import "@/connectors/woocommerce";
 import "@/connectors/feed";
@@ -12,7 +12,7 @@ import "@/connectors/magento";
 import "@/connectors/api";
 
 /** GET /api/v1/syncs — recent sync runs (newest first). */
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   const auth = await requireApiKey(req, "read");
   if (auth instanceof NextResponse) return auth;
 
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 const bodySchema = z.object({ source_id: z.string().uuid() });
 
 /** POST /api/v1/syncs — trigger a pull sync for one source. */
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const auth = await requireApiKey(req, "write");
   if (auth instanceof NextResponse) return auth;
 
@@ -54,3 +54,6 @@ export async function POST(req: Request) {
     return apiError(422, (e as Error).message);
   }
 }
+
+export const GET = withApiErrors(_GET);
+export const POST = withApiErrors(_POST);

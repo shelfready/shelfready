@@ -54,7 +54,7 @@ export function SettingsForm({
         />
       </div>
       {typeof state === "string" && state !== "idle" && state !== "busy" && state !== "saved" && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state}</p>
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{state}</p>
       )}
       <Button onClick={() => void save()} disabled={state === "busy"}>
         {state === "busy" ? <Spinner /> : null}

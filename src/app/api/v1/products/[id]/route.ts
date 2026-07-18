@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
-import { apiError, requireApiKey } from "@/lib/api-auth";
+import { apiError, requireApiKey, withApiErrors } from "@/lib/api-auth";
+import { toApiProduct } from "../serialize";
 
 /** GET /api/v1/products/{id} — one product with variants. */
-export async function GET(
+async function _GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -18,5 +19,7 @@ export async function GET(
   const variants = (await scope.variants.list()).filter(
     (v) => v.productId === product.id,
   );
-  return NextResponse.json({ data: { ...product, variants } });
+  return NextResponse.json({ data: toApiProduct(product, variants) });
 }
+
+export const GET = withApiErrors(_GET);

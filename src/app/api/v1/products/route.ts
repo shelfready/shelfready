@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
-import { requireApiKey } from "@/lib/api-auth";
+import { requireApiKey, withApiErrors } from "@/lib/api-auth";
+import { toApiProduct } from "./serialize";
 
 /** GET /api/v1/products — the canonical catalog, paginated, with variants. */
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   const auth = await requireApiKey(req, "read");
   if (auth instanceof NextResponse) return auth;
 
@@ -30,9 +31,11 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json({
-    data: slice.map((p) => ({ ...p, variants: byProduct.get(p.id) ?? [] })),
+    data: slice.map((p) => toApiProduct(p, byProduct.get(p.id) ?? [])),
     page,
     page_size: pageSize,
     total: all.length,
   });
 }
+
+export const GET = withApiErrors(_GET);

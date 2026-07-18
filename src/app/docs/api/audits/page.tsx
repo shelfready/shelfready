@@ -42,7 +42,7 @@ export default function ApiAuditsPage() {
     "last_run": {
       "run_id": "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
       "status": "succeeded",
-      "stats": { "catalog_score": 72, "grade": "B" },
+      "stats": { "catalogScore": 72, "grade": "B", "items": 128, "findings": 41 },
       "started_at": "2026-07-17T09:12:00.000Z",
       "finished_at": "2026-07-17T09:12:04.000Z"
     },

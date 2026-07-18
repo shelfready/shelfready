@@ -43,7 +43,7 @@ export function ConnectFeed() {
         onChange={set("defaultCurrency")}
       />
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
       <Button onClick={() => void submit()} disabled={busy || !form.feedUrl || !form.name}>
         {busy ? <Spinner /> : null}

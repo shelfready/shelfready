@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { blogPosts, formatDate } from "@/lib/blog-data"
 
 export const metadata: Metadata = {
-  title: "Blog — ShelfReady",
+  title: "Blog",
   description: "Guides and ideas on making independent stores discoverable by AI shopping agents.",
 }
 
