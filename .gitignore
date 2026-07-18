@@ -30,3 +30,4 @@ coverage/
 .DS_Store
 shelf-ready-landing-page/
 shelf-ready-landing-page.zip*
+.claude/worktrees/
