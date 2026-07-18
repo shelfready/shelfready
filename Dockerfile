@@ -18,6 +18,9 @@ ENV NODE_ENV=production
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
+# Writable feed-artifact dir (FsStore default until R2 credentials land,
+# issue #16) — /app itself is root-owned, so create it before dropping root.
+RUN mkdir -p /app/.artifacts && chown node:node /app/.artifacts
 USER node
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0
