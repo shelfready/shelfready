@@ -100,11 +100,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
     async createUser({ user }) {
       if (user.id) await provisionNewUser(getDb(), user.id);
     },
+    async signIn({ user }) {
+      // Admin bootstrap (issue #116): grant the flag to ADMIN_EMAILS
+      // accounts on sign-in. The DB flag is the source of truth —
+      // revoking = clearing is_admin; the env only ever grants.
+      const admins = (process.env.ADMIN_EMAILS ?? "")
+        .split(",")
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean);
+      if (user.email && admins.includes(user.email.toLowerCase())) {
+        await getDb()
+          .update(users)
+          .set({ isAdmin: true })
+          .where(eq(users.email, user.email.toLowerCase()));
+      }
+    },
   },
   callbacks: {
     async session({ session, token }) {
       if (token.sub) {
         session.user.id = token.sub;
+        // Checked per request (not JWT-cached) so revocation is instant.
+        const [row] = await getDb()
+          .select({ isAdmin: users.isAdmin })
+          .from(users)
+          .where(eq(users.id, token.sub));
+        session.isAdmin = row?.isAdmin ?? false;
         session.activeMerchant = await activeMerchantFor(getDb(), token.sub);
       }
       return session;
@@ -115,5 +136,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
 declare module "next-auth" {
   interface Session {
     activeMerchant: Awaited<ReturnType<typeof activeMerchantFor>>;
+    isAdmin: boolean;
   }
 }

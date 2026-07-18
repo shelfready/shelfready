@@ -31,7 +31,7 @@ const titles: Record<string, string> = {
 };
 
 export type TopbarMerchant = { merchantId: string; name: string };
-export type TopbarUser = { name: string; email: string };
+export type TopbarUser = { name: string; email: string; isAdmin?: boolean };
 
 function initialsOf(name: string) {
   return (
@@ -267,6 +267,9 @@ export function DashboardTopbar({
             <DropdownMenuItem render={<Link href="/dashboard/support" />}>
               Support
             </DropdownMenuItem>
+            {user.isAdmin && (
+              <DropdownMenuItem render={<Link href="/admin" />}>Admin</DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => void signOutAction()}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
