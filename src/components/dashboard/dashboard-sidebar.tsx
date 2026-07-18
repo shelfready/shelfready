@@ -49,7 +49,9 @@ export function DashboardSidebar({ quota }: { quota: QuotaInfo }) {
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-sidebar lg:flex">
       <div className="flex h-16 items-center border-b border-border px-5">
-        <Logo />
+        <Link href="/" aria-label="ShelfReady home">
+          <Logo />
+        </Link>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-3">
         <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">

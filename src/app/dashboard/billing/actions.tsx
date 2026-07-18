@@ -23,7 +23,7 @@ export function UpgradeButton({ plan }: { plan: string }) {
 
   return (
     <div className="grid gap-1">
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-destructive">{error}</span>}
       <Button size="sm" onClick={() => void upgrade()} disabled={busy}>
         {busy ? <Spinner /> : null}
         Upgrade
@@ -46,7 +46,7 @@ export function ManageBillingButton() {
   return (
     <Button variant="secondary" size="sm" onClick={() => void open()} disabled={busy}>
       {busy ? <Spinner /> : null}
-      Manage billing
+      Billing portal &amp; invoices
     </Button>
   );
 }

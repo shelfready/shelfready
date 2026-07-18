@@ -31,7 +31,9 @@ export default function DemoLayout({ children }: { children: ReactNode }) {
       <div className="flex flex-1">
         <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar sm:flex">
           <div className="flex h-16 items-center border-b border-border px-5">
-            <Logo />
+            <Link href="/" aria-label="ShelfReady home">
+              <Logo />
+            </Link>
           </div>
           <nav className="flex flex-1 flex-col gap-1 p-3">
             {NAV.map((item) => (
