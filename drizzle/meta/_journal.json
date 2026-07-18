@@ -71,6 +71,13 @@
       "when": 1784386459745,
       "tag": "0009_fine_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784399311645,
+      "tag": "0010_neat_shen",
+      "breakpoints": true
     }
   ]
 }

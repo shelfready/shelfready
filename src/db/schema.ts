@@ -79,6 +79,9 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
   name: text("name"),
+  // Internal admin panel access (issue #116) — bootstrapped from
+  // ADMIN_EMAILS at sign-in; the DB flag is the source of truth.
+  isAdmin: boolean("is_admin").notNull().default(false),
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   image: text("image"),
   // scrypt hash (src/lib/password.ts); null for magic-link/OAuth-only users

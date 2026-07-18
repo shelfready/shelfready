@@ -49,6 +49,7 @@ export default async function DashboardLayout({
           user={{
             name: session.user?.name ?? session.user?.email ?? "Account",
             email: session.user?.email ?? "",
+            isAdmin: session.isAdmin,
           }}
           signOutAction={signOutAction}
         />
