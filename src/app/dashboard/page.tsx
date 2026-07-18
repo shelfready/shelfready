@@ -55,6 +55,11 @@ function runSummary(run: {
   if (run.kind === "render" && s.items != null) {
     return `${label} — ${s.eligible ?? 0}/${s.items} items eligible`;
   }
+  if (run.kind === "sync" && s.upserted != null) {
+    return s.capped > 0
+      ? `${label} — ${s.upserted} items (${s.capped} over your plan's SKU limit)`
+      : `${label} — ${s.upserted} items`;
+  }
   if (run.kind === "sync" && s.items != null) {
     return `${label} — ${s.items} items`;
   }

@@ -20,6 +20,7 @@ type ImportResult = {
     upserted: number;
     rejected: number;
     warnings: number;
+    capped?: number;
     rejections: {
       externalId: string | null;
       issues: { field: string; message: string }[];
@@ -151,6 +152,9 @@ export function UploadFlow() {
             )}
             {result.stats.warnings > 0 && (
               <Badge tone="warning">{result.stats.warnings} warnings</Badge>
+            )}
+            {(result.stats.capped ?? 0) > 0 && (
+              <Badge tone="danger">{result.stats.capped} over plan limit</Badge>
             )}
           </p>
           {result.stats.rejections.length > 0 && (

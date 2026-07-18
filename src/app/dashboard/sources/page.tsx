@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
@@ -12,7 +13,17 @@ import { ConnectMagento } from "./connect-magento";
 export default async function SourcesPage() {
   const { merchant } = await requireMerchant();
   const scope = forMerchant(getDb(), merchant.merchantId);
-  const sources = await scope.sources.list();
+  const [sources, runs] = await Promise.all([
+    scope.sources.list(),
+    scope.feedRuns.list(),
+  ]);
+  // Latest sync run per source — to surface plan-cap truncation (#122).
+  const latestSyncBySource = new Map<string, (typeof runs)[number]>();
+  for (const r of runs.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())) {
+    if (r.kind === "sync" && r.sourceId && !latestSyncBySource.has(r.sourceId)) {
+      latestSyncBySource.set(r.sourceId, r);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -41,6 +52,20 @@ export default async function SourcesPage() {
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground">
                     {s.lastSyncAt ? timeAgo(s.lastSyncAt) : "never"}
+                    {(() => {
+                      const st = latestSyncBySource.get(s.id)?.stats as
+                        | { capped?: number; maxSkus?: number }
+                        | null;
+                      return (st?.capped ?? 0) > 0 ? (
+                        <span className="mt-0.5 block text-xs text-accent-amber-foreground">
+                          {st!.capped} items over your {st!.maxSkus}-SKU plan
+                          limit —{" "}
+                          <Link href="/dashboard/billing" className="underline">
+                            upgrade
+                          </Link>
+                        </span>
+                      ) : null;
+                    })()}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {s.type !== "csv" && <SyncNowButton sourceId={s.id} />}

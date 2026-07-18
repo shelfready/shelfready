@@ -168,3 +168,55 @@ describe("credentials", () => {
     ).toBeNull();
   });
 });
+
+describe("plan SKU cap (issue #122)", () => {
+  it("truncates new SKUs at the cap but always updates existing ones", async () => {
+    const { db: capDb, close: capClose } = await createTestDb();
+    const capTenants = await createTwoTenants(capDb);
+    const merchantId = capTenants.a.merchant.id;
+    // Tight cap via entitlements override.
+    const { merchants } = await import("@/db/schema");
+    await capDb
+      .update(merchants)
+      .set({ entitlements: { maxSkus: 3 } })
+      .where(eq(merchants.id, merchantId));
+    // The seeded demo tenant already has products — clear for a clean count.
+    const { products } = await import("@/db/schema");
+    await capDb.delete(products).where(eq(products.merchantId, merchantId));
+
+    const items = Array.from({ length: 5 }, (_, i) => ({
+      ...validItem,
+      externalId: `CAP-${i}`,
+      variants: [],
+    }));
+    const [source] = await capDb
+      .insert(sources)
+      .values({ merchantId, type: "fake", name: "Cap source", config: { items } })
+      .returning();
+
+    const { runSyncItems } = await import("./sync");
+    const first = await runSyncItems(capDb, merchantId, source.id, items);
+    expect(first.stats.upserted).toBe(3);
+    expect(first.stats.capped).toBe(2);
+    expect(first.stats.maxSkus).toBe(3);
+
+    // Re-sync: the same 3 SKUs update (not double-counted), 2 still capped.
+    const updated = items.map((i) => ({ ...i, title: "Updated title" }));
+    const second = await runSyncItems(capDb, merchantId, source.id, updated);
+    expect(second.stats.upserted).toBe(3);
+    expect(second.stats.capped).toBe(2);
+
+    const rows = await capTenants.a.scope.products.list();
+    expect(rows).toHaveLength(3);
+    expect(rows.every((p) => p.title === "Updated title")).toBe(true);
+
+    // The run is recorded as succeeded with capped stats visible.
+    const [run] = await capDb
+      .select()
+      .from(feedRuns)
+      .where(eq(feedRuns.id, second.runId));
+    expect(run.status).toBe("succeeded");
+    expect((run.stats as { capped: number }).capped).toBe(2);
+    await capClose();
+  });
+});
