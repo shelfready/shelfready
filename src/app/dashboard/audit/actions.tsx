@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Spinner } from "@/components/ui";
+import { Download, Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/link-button";
 
 export function ReAuditButton() {
   const router = useRouter();
@@ -16,9 +18,18 @@ export function ReAuditButton() {
   }
 
   return (
-    <Button size="sm" onClick={() => void run()} disabled={busy}>
-      {busy ? <Spinner /> : null}
+    <Button onClick={() => void run()} disabled={busy}>
+      {busy ? <Loader2 className="animate-spin" /> : <RefreshCw />}
       {busy ? "Auditing…" : "Re-run audit"}
     </Button>
+  );
+}
+
+export function ExportCsvButton() {
+  return (
+    <LinkButton variant="outline" href="/api/audit/export" external>
+      <Download />
+      Export CSV
+    </LinkButton>
   );
 }

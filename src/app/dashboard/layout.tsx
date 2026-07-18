@@ -1,18 +1,15 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { eq } from "drizzle-orm";
+import { getDb } from "@/db";
+import { merchants } from "@/db/schema";
+import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
+import { merchantsFor } from "@/lib/tenancy";
+import { PLANS, isPlanId } from "@/billing/plans";
 import { signOut } from "@/auth";
-import { BrandMark, Button } from "@/components/ui";
-
-const NAV = [
-  { href: "/dashboard", label: "Dashboard", enabled: true },
-  { href: "/dashboard/sources", label: "Sources", enabled: true },
-  { href: "/dashboard/feeds", label: "Feeds", enabled: true },
-  { href: "/dashboard/audit", label: "Audit", enabled: true },
-  { href: "/dashboard/enrichment", label: "Enrichment", enabled: true },
-  { href: "/dashboard/billing", label: "Billing", enabled: true },
-  { href: "/dashboard/settings", label: "Settings", enabled: true },
-];
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { DashboardTopbar } from "@/components/dashboard/dashboard-topbar";
+import { MobileTabBar } from "@/components/dashboard/mobile-tab-bar";
 
 export default async function DashboardLayout({
   children,
@@ -20,63 +17,43 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   const { session, merchant } = await requireMerchant();
+  const db = getDb();
+  const [[merchantRow], productRows, allMerchants] = await Promise.all([
+    db.select().from(merchants).where(eq(merchants.id, merchant.merchantId)),
+    forMerchant(db, merchant.merchantId).products.list(),
+    session.user?.id ? merchantsFor(db, session.user.id) : Promise.resolve([]),
+  ]);
+  const plan = PLANS[isPlanId(merchantRow?.plan ?? "") ? (merchantRow!.plan as keyof typeof PLANS) : "free"];
+
+  async function signOutAction() {
+    "use server";
+    await signOut({ redirectTo: "/" });
+  }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-slate-200 bg-white sm:flex">
-        <Link href="/" className="flex items-center gap-2 px-5 py-5">
-          <BrandMark className="h-7 w-7" />
-          <span className="text-lg font-semibold tracking-tight">ShelfReady</span>
-        </Link>
-        <nav className="flex flex-1 flex-col gap-1 px-3">
-          {NAV.map((item) =>
-            item.enabled ? (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-800"
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <span
-                key={item.href}
-                className="cursor-default rounded-lg px-3 py-2 text-sm text-slate-400"
-                title="Coming soon"
-              >
-                {item.label}
-                <span className="ml-2 text-[10px] uppercase tracking-wide">soon</span>
-              </span>
-            ),
-          )}
-        </nav>
-        <div className="border-t border-slate-200 px-5 py-4 text-xs text-slate-500">
-          Pre-release
-        </div>
-      </aside>
-
+    <div className="flex min-h-screen bg-muted/30">
+      <DashboardSidebar
+        quota={{
+          planLabel: plan.label,
+          used: productRows.length,
+          max: plan.maxSkus,
+        }}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-slate-900">{merchant.name}</p>
-            <p className="truncate text-xs text-slate-500">
-              {session.user?.email} · {merchant.role}
-            </p>
-          </div>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-          >
-            <Button variant="secondary" size="sm" type="submit">
-              Sign out
-            </Button>
-          </form>
-        </header>
-        <main className="flex-1 px-6 py-8">
-          <div className="mx-auto max-w-5xl">{children}</div>
-        </main>
+        <DashboardTopbar
+          merchant={{ merchantId: merchant.merchantId, name: merchant.name }}
+          merchants={allMerchants.map((m) => ({
+            merchantId: m.merchantId,
+            name: m.name,
+          }))}
+          user={{
+            name: session.user?.name ?? session.user?.email ?? "Account",
+            email: session.user?.email ?? "",
+          }}
+          signOutAction={signOutAction}
+        />
+        <main className="flex-1 px-4 pb-24 pt-6 sm:px-6 lg:pb-10">{children}</main>
+        <MobileTabBar />
       </div>
     </div>
   );

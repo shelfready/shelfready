@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Spinner } from "@/components/ui";
+import { Check, Loader2, Sparkles, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function RunEnrichmentButton() {
   const router = useRouter();
@@ -20,10 +21,10 @@ export function RunEnrichmentButton() {
   return (
     <div className="flex items-center gap-2">
       {typeof state === "string" && state !== "idle" && state !== "busy" && (
-        <span className="text-sm text-red-600">{state}</span>
+        <span className="text-sm text-destructive">{state}</span>
       )}
-      <Button size="sm" onClick={() => void run()} disabled={state === "busy"}>
-        {state === "busy" ? <Spinner /> : null}
+      <Button onClick={() => void run()} disabled={state === "busy"}>
+        {state === "busy" ? <Loader2 className="animate-spin" /> : <Sparkles />}
         {state === "busy" ? "Asking Claude…" : "Run enrichment"}
       </Button>
     </div>
@@ -47,10 +48,18 @@ export function ProposalActions({ proposalId }: { proposalId: string }) {
 
   return (
     <div className="flex gap-2">
-      <Button size="sm" onClick={() => void review("approved")} disabled={busy}>
+      <Button size="sm" className="flex-1" onClick={() => void review("approved")} disabled={busy}>
+        <Check />
         Approve
       </Button>
-      <Button variant="secondary" size="sm" onClick={() => void review("rejected")} disabled={busy}>
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex-1"
+        onClick={() => void review("rejected")}
+        disabled={busy}
+      >
+        <X />
         Reject
       </Button>
     </div>
@@ -73,8 +82,8 @@ export function ApplyApprovedButton({ count }: { count: number }) {
   }
 
   return (
-    <Button size="sm" onClick={() => void apply()} disabled={busy}>
-      {busy ? <Spinner /> : null}
+    <Button variant="outline" onClick={() => void apply()} disabled={busy}>
+      {busy ? <Loader2 className="animate-spin" /> : <Check />}
       Apply {count} approved
     </Button>
   );

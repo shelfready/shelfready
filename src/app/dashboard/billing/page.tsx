@@ -24,7 +24,7 @@ export default async function BillingPage() {
   const currentPlan: PlanId = isPlanId(m.plan) ? m.plan : "free";
 
   return (
-    <>
+    <div className="mx-auto max-w-5xl">
       <PageHeader
         title="Billing"
         description="Flat monthly tiers by catalog size. Prices are pre-release placeholders — payments run in Stripe test mode."
@@ -37,7 +37,7 @@ export default async function BillingPage() {
           return (
             <Card
               key={planId}
-              className={isCurrent ? "border-brand-600 ring-1 ring-brand-600" : ""}
+              className={isCurrent ? "border-primary ring-1 ring-primary" : ""}
             >
               <div className="mb-1 flex items-center justify-between">
                 <h2 className="text-base font-semibold">{plan.label}</h2>
@@ -46,13 +46,13 @@ export default async function BillingPage() {
               <p className="text-2xl font-semibold">
                 {plan.priceUsdMonthly === 0 ? "Free" : `$${plan.priceUsdMonthly}`}
                 {plan.priceUsdMonthly > 0 && (
-                  <span className="text-sm font-normal text-slate-500">/mo</span>
+                  <span className="text-sm font-normal text-muted-foreground">/mo</span>
                 )}
               </p>
-              <p className="mb-3 text-sm text-slate-500">
+              <p className="mb-3 text-sm text-muted-foreground">
                 up to {plan.maxSkus.toLocaleString("en-US")} SKUs
               </p>
-              <ul className="mb-4 grid gap-1 text-sm text-slate-600">
+              <ul className="mb-4 grid gap-1 text-sm text-muted-foreground">
                 {FEATURES[planId].map((f) => (
                   <li key={f}>• {f}</li>
                 ))}
@@ -62,6 +62,6 @@ export default async function BillingPage() {
           );
         })}
       </div>
-    </>
+    </div>
   );
 }

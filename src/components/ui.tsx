@@ -1,8 +1,9 @@
 import type { ComponentProps, ReactNode } from "react";
 
 /**
- * ShelfReady design-system primitives (issue #53). Deliberately tiny:
- * composable pieces over a component-library dependency.
+ * Legacy design-system primitives (issue #53), restyled onto the v0 token
+ * system (#94) so older client forms match the new dashboard without a
+ * rewrite. New code should import from `@/components/ui/*` instead.
  */
 
 function cx(...parts: (string | false | null | undefined)[]) {
@@ -38,10 +39,10 @@ export function Button({
         "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm",
         variant === "primary" &&
-          "bg-brand-700 text-white hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-brand-500",
+          "bg-primary text-primary-foreground hover:bg-primary/85 focus-visible:outline-2 focus-visible:outline-ring",
         variant === "secondary" &&
-          "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
-        variant === "ghost" && "text-slate-600 hover:bg-slate-100",
+          "border border-border bg-card text-foreground hover:bg-muted",
+        variant === "ghost" && "text-muted-foreground hover:bg-muted hover:text-foreground",
         className,
       )}
       {...props}
@@ -59,7 +60,7 @@ export function Card({
   return (
     <div
       className={cx(
-        "rounded-xl border border-slate-200 bg-white p-6 shadow-sm",
+        "rounded-xl border border-border bg-card p-6 shadow-sm",
         className,
       )}
     >
@@ -76,10 +77,10 @@ export function Badge({
   children: ReactNode;
 }) {
   const tones = {
-    neutral: "bg-slate-100 text-slate-700",
-    success: "bg-brand-100 text-brand-800",
-    warning: "bg-amber-100 text-amber-800",
-    danger: "bg-red-100 text-red-700",
+    neutral: "bg-muted text-muted-foreground",
+    success: "bg-primary/10 text-primary",
+    warning: "bg-accent-amber/20 text-accent-amber-foreground",
+    danger: "bg-destructive/10 text-destructive",
   } as const;
   return (
     <span
@@ -98,7 +99,7 @@ export function Input(props: ComponentProps<"input">) {
     <input
       {...props}
       className={cx(
-        "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-600 focus:outline-2 focus:outline-brand-200",
+        "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/15",
         props.className,
       )}
     />
@@ -110,7 +111,7 @@ export function Select(props: ComponentProps<"select">) {
     <select
       {...props}
       className={cx(
-        "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-600 focus:outline-2 focus:outline-brand-200",
+        "w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/15",
         props.className,
       )}
     />
@@ -125,7 +126,7 @@ export function Label({
   htmlFor?: string;
 }) {
   return (
-    <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium text-slate-700">
+    <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium text-foreground">
       {children}
     </label>
   );
@@ -157,8 +158,8 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
-        {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {action}
     </div>
@@ -177,8 +178,8 @@ export function EmptyState({
   return (
     <Card className="flex flex-col items-center gap-3 py-12 text-center">
       <BrandMark className="h-10 w-10 opacity-40" />
-      <h2 className="text-lg font-medium text-slate-900">{title}</h2>
-      <p className="max-w-sm text-sm text-slate-500">{description}</p>
+      <h2 className="text-lg font-medium text-foreground">{title}</h2>
+      <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
       {action}
     </Card>
   );

@@ -52,9 +52,9 @@ export async function provisionNewUser(db: AnyDb, userId: string) {
   }
 }
 
-/** The merchant a user acts as (first membership for now; org switcher later). */
-export async function activeMerchantFor(db: AnyDb, userId: string) {
-  const rows = await db
+/** All merchants a user belongs to, oldest membership first. */
+export async function merchantsFor(db: AnyDb, userId: string) {
+  return db
     .select({
       merchantId: memberships.merchantId,
       role: memberships.role,
@@ -65,5 +65,11 @@ export async function activeMerchantFor(db: AnyDb, userId: string) {
     .innerJoin(merchants, eq(memberships.merchantId, merchants.id))
     .where(eq(memberships.userId, userId))
     .orderBy(memberships.createdAt);
+}
+
+/** The merchant a user acts as by default (first membership; the dashboard
+ * topbar switcher overrides via cookie — see require-merchant.ts). */
+export async function activeMerchantFor(db: AnyDb, userId: string) {
+  const rows = await merchantsFor(db, userId);
   return rows[0] ?? null;
 }
