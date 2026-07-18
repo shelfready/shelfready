@@ -423,3 +423,22 @@ export const apiUsage = pgTable(
     index("api_usage_merchant_idx").on(t.merchantId),
   ],
 );
+
+// Contact-form submissions (issue #119). Not tenant-owned — the public
+// form has no session. Stored BEFORE email delivery is attempted, so a
+// failed send can never lose a message; triaged in the admin panel.
+export const contactMessageStatusEnum = pgEnum("contact_message_status", [
+  "new",
+  "replied",
+  "closed",
+]);
+
+export const contactMessages = pgTable("contact_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  topic: text("topic"),
+  message: text("message").notNull(),
+  status: contactMessageStatusEnum("status").notNull().default("new"),
+  ...timestamps,
+});

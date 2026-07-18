@@ -440,3 +440,41 @@ export async function adminMerchantDetail(
     })),
   };
 }
+
+/** Support inbox (issue #119) — contact messages, newest first. */
+export async function adminContactMessages(
+  db: AnyDb,
+  status?: "new" | "replied" | "closed",
+) {
+  const { contactMessages } = await import("@/db/schema");
+  const rows = await db
+    .select()
+    .from(contactMessages)
+    .orderBy(desc(contactMessages.createdAt))
+    .limit(500);
+  return status ? rows.filter((r) => r.status === status) : rows;
+}
+
+export async function adminCountNewMessages(db: AnyDb): Promise<number> {
+  const { contactMessages } = await import("@/db/schema");
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(contactMessages)
+    .where(eq(contactMessages.status, "new"));
+  return n;
+}
+
+/** The one admin mutation so far: triage a contact message. */
+export async function adminSetMessageStatus(
+  db: AnyDb,
+  id: string,
+  status: "new" | "replied" | "closed",
+) {
+  const { contactMessages } = await import("@/db/schema");
+  const [row] = await db
+    .update(contactMessages)
+    .set({ status })
+    .where(eq(contactMessages.id, id))
+    .returning();
+  return row ?? null;
+}

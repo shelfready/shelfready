@@ -110,3 +110,37 @@ describe("admin merchants (#118)", () => {
     ).toBeNull();
   });
 });
+
+describe("support inbox (#119)", () => {
+  it("lists, counts, and triages contact messages", async () => {
+    const { contactMessages } = await import("@/db/schema");
+    const {
+      adminContactMessages,
+      adminCountNewMessages,
+      adminSetMessageStatus,
+    } = await import("./queries");
+
+    const [msg] = await db
+      .insert(contactMessages)
+      .values({
+        name: "Visitor",
+        email: "visitor@example.com",
+        topic: "Pricing",
+        message: "How does the free plan work?",
+      })
+      .returning();
+
+    expect(await adminCountNewMessages(db)).toBe(1);
+    const list = await adminContactMessages(db, "new");
+    expect(list.map((m) => m.id)).toContain(msg.id);
+
+    const replied = await adminSetMessageStatus(db, msg.id, "replied");
+    expect(replied!.status).toBe("replied");
+    expect(await adminCountNewMessages(db)).toBe(0);
+    expect(await adminContactMessages(db, "replied")).toHaveLength(1);
+
+    expect(
+      await adminSetMessageStatus(db, "00000000-0000-0000-0000-000000000000", "closed"),
+    ).toBeNull();
+  });
+});

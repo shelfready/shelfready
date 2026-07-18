@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
+import { getDb } from "@/db";
+import { adminCountNewMessages } from "@/admin/queries";
 import { requireAdmin } from "@/lib/require-admin";
 import { AdminSidebar } from "./sidebar";
 
@@ -8,6 +10,7 @@ export const metadata = { title: "Admin — ShelfReady" };
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const { session } = await requireAdmin();
+  const newMessages = await adminCountNewMessages(getDb());
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -19,7 +22,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </Link>
       </div>
       <div className="flex flex-1 bg-muted/30">
-        <AdminSidebar />
+        <AdminSidebar newMessages={newMessages} />
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6">
           <div className="mx-auto max-w-6xl">{children}</div>
         </main>
