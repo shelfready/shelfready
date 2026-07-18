@@ -79,3 +79,34 @@ describe("adminOverview expanded metrics (#117)", () => {
     expect(todayApi!.total).toBe(2);
   });
 });
+
+describe("admin merchants (#118)", () => {
+  it("lists merchants with counts, owner, and filters", async () => {
+    const { adminMerchantsList } = await import("./queries");
+    const all = await adminMerchantsList(db);
+    expect(all.length).toBe(2);
+    const a = all.find((m) => m.id === tenants.a.merchant.id)!;
+    expect(a.ownerEmail).toBe("demo-tenant-a@useshelfready.com");
+    expect(a.products).toBeGreaterThan(0);
+    expect(a.sources).toBeGreaterThan(0);
+
+    const growthOnly = await adminMerchantsList(db, { plan: "growth" });
+    expect(growthOnly.map((m) => m.id)).toEqual([tenants.b.merchant.id]);
+
+    const byEmail = await adminMerchantsList(db, { q: "demo-tenant-a@" });
+    expect(byEmail.map((m) => m.id)).toEqual([tenants.a.merchant.id]);
+  });
+
+  it("detail returns members, sources, counts, and null for unknown ids", async () => {
+    const { adminMerchantDetail } = await import("./queries");
+    const detail = await adminMerchantDetail(db, tenants.a.merchant.id);
+    expect(detail).not.toBeNull();
+    expect(detail!.members.some((m) => m.email === "owner-a@example.com")).toBe(true);
+    expect(detail!.counts.products).toBeGreaterThan(0);
+    expect(detail!.sources.length).toBeGreaterThan(0);
+
+    expect(
+      await adminMerchantDetail(db, "00000000-0000-0000-0000-000000000000"),
+    ).toBeNull();
+  });
+});
