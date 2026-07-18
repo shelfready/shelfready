@@ -2,14 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Input, Label, Spinner } from "@/components/ui";
+import { ArrowLeft, CheckCircle2, Loader2, MailCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function ResetForm({ token, email }: { token: string | null; email: string | null }) {
   const [value, setValue] = useState(email ?? "");
   const [password, setPassword] = useState("");
-  const [state, setState] = useState<"idle" | "busy" | "sent" | "done" | string>("idle");
+  // "idle" | "busy" | "sent" | "done" | anything else = error message.
+  const [state, setState] = useState<string>("idle");
 
-  async function requestReset() {
+  async function requestReset(e: React.FormEvent) {
+    e.preventDefault();
     setState("busy");
     await fetch("/api/auth/reset", {
       method: "POST",
@@ -19,7 +24,8 @@ export function ResetForm({ token, email }: { token: string | null; email: strin
     setState("sent");
   }
 
-  async function confirmReset() {
+  async function confirmReset(e: React.FormEvent) {
+    e.preventDefault();
     setState("busy");
     const res = await fetch("/api/auth/reset", {
       method: "POST",
@@ -31,69 +37,127 @@ export function ResetForm({ token, email }: { token: string | null; email: strin
     setState("done");
   }
 
+  const error =
+    !["idle", "busy", "sent", "done"].includes(state) ? state : null;
+
   if (token && email) {
     if (state === "done") {
       return (
-        <div className="text-center">
-          <h1 className="mb-2 text-lg font-semibold">Password updated</h1>
-          <p className="mb-4 text-sm text-slate-500">You can sign in with your new password now.</p>
-          <Link href="/login" className="text-brand-700 underline">Go to sign in</Link>
+        <div className="flex flex-col items-center text-center">
+          <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <CheckCircle2 className="size-6" />
+          </span>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight">Password updated</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            You can sign in with your new password now.
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            <ArrowLeft className="size-4" />
+            Go to sign in
+          </Link>
         </div>
       );
     }
     return (
-      <div className="grid gap-3">
-        <h1 className="text-lg font-semibold">Choose a new password</h1>
-        <div>
-          <Label htmlFor="new-password">New password (min 10 characters)</Label>
-          <Input
-            id="new-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
-          />
+      <>
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight">Choose a new password</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Setting a new password for{" "}
+            <span className="font-medium text-foreground">{email}</span>.
+          </p>
         </div>
-        {typeof state === "string" && !["idle", "busy", "sent", "done"].includes(state) && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state}</p>
-        )}
-        <Button onClick={() => void confirmReset()} disabled={state === "busy" || !password}>
-          {state === "busy" ? <Spinner /> : null}
-          Set new password
-        </Button>
-      </div>
+        <form onSubmit={confirmReset} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="new-password">New password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              placeholder="At least 10 characters"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+          </div>
+          {error && (
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={state === "busy" || !password}>
+            {state === "busy" ? <Loader2 className="animate-spin" /> : null}
+            {state === "busy" ? "Saving…" : "Set new password"}
+          </Button>
+        </form>
+      </>
     );
   }
 
   if (state === "sent") {
     return (
-      <div className="text-center">
-        <h1 className="mb-2 text-lg font-semibold">Check your email</h1>
-        <p className="text-sm text-slate-500">
-          If an account exists for {value}, a reset link is on its way. It expires in 1 hour.
+      <div className="flex flex-col items-center text-center">
+        <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <MailCheck className="size-6" />
+        </span>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight">Check your inbox</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          If an account exists for{" "}
+          <span className="font-medium text-foreground">{value}</span>, a reset
+          link is on its way. It expires in 1 hour.
         </p>
+        <Button variant="outline" className="mt-6 w-full" onClick={() => setState("idle")}>
+          Use a different email
+        </Button>
+        <Link
+          href="/login"
+          className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+        >
+          <ArrowLeft className="size-4" />
+          Back to sign in
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-3">
-      <h1 className="text-lg font-semibold">Reset your password</h1>
-      <p className="text-sm text-slate-500">We&apos;ll email you a reset link.</p>
-      <div>
-        <Label htmlFor="reset-email">Email</Label>
-        <Input
-          id="reset-email"
-          type="email"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          autoComplete="email"
-        />
+    <>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Reset your password</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Enter your email and we&apos;ll send you a link to reset it.
+        </p>
       </div>
-      <Button onClick={() => void requestReset()} disabled={state === "busy" || !value}>
-        {state === "busy" ? <Spinner /> : null}
-        Send reset link
-      </Button>
-    </div>
+
+      <form onSubmit={requestReset} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="reset-email">Work email</Label>
+          <Input
+            id="reset-email"
+            type="email"
+            placeholder="you@yourstore.com"
+            required
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            autoComplete="email"
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={state === "busy" || !value}>
+          {state === "busy" ? <Loader2 className="animate-spin" /> : null}
+          {state === "busy" ? "Sending link…" : "Send reset link"}
+        </Button>
+      </form>
+
+      <Link
+        href="/login"
+        className="mt-6 inline-flex w-full items-center justify-center gap-1 text-sm font-medium text-primary hover:underline"
+      >
+        <ArrowLeft className="size-4" />
+        Back to sign in
+      </Link>
+    </>
   );
 }

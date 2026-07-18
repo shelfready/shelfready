@@ -1,27 +1,40 @@
 import Link from "next/link";
-import { BrandMark, Card } from "@/components/ui";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "./form";
 
 export const metadata = { title: "Create account — ShelfReady" };
 
 export default function RegisterPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
-      <Link href="/" className="mb-6 flex items-center gap-2">
-        <BrandMark className="h-9 w-9" />
-        <span className="text-xl font-semibold tracking-tight">ShelfReady</span>
-      </Link>
-      <Card className="w-full max-w-sm">
-        <h1 className="mb-1 text-lg font-semibold">Create your account</h1>
-        <p className="mb-5 text-sm text-slate-500">
-          Free for up to 25 SKUs — feeds, audit, and fix-list included.
+    <AuthShell>
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Create your workspace</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Free for up to 25 SKUs — feeds, audit, and fix-list included. No card
+          required.
         </p>
-        <RegisterForm />
-        <p className="mt-4 text-center text-sm text-slate-500">
-          Already have an account?{" "}
-          <Link href="/login" className="text-brand-700 underline">Sign in</Link>
-        </p>
-      </Card>
-    </main>
+      </div>
+
+      <RegisterForm />
+
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        By continuing you agree to our{" "}
+        <Link href="/terms" className="underline hover:text-foreground">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline hover:text-foreground">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-primary hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
