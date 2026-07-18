@@ -50,7 +50,9 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div className="max-w-xs">
-            <Logo />
+            <Link href="/" aria-label="ShelfReady home" className="inline-block">
+              <Logo />
+            </Link>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
               Make your independent store spec-compliant, discoverable, and fresh for AI
               shopping agents.

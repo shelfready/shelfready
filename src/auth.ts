@@ -91,7 +91,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  session: { strategy: "jwt" },
+  // Persistent sign-in: the session cookie lives 90 days and refreshes
+  // on activity — no re-login on every visit.
+  session: { strategy: "jwt", maxAge: 90 * 24 * 60 * 60 },
   pages: { signIn: "/login", verifyRequest: "/login/check-email" },
   providers: buildProviders(),
   events: {

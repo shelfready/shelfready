@@ -15,7 +15,9 @@ export function AuthShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen">
       <div className="flex w-full flex-col lg:w-1/2">
         <header className="flex items-center justify-between p-6">
-          <Logo />
+          <Link href="/" aria-label="ShelfReady home">
+            <Logo />
+          </Link>
           <ThemeToggle />
         </header>
         <div className="flex flex-1 items-center justify-center px-6 py-8">

@@ -218,7 +218,13 @@ export function DashboardTopbar({
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur sm:px-6">
       {/* Mobile: multi-store users get the switcher; single-store, the logo. */}
       <div className="flex items-center gap-3 lg:hidden">
-        {merchants.length > 1 ? switcher : <Logo />}
+        {merchants.length > 1 ? (
+          switcher
+        ) : (
+          <Link href="/" aria-label="ShelfReady home">
+            <Logo />
+          </Link>
+        )}
       </div>
 
       <div className="hidden items-center gap-3 lg:flex">
