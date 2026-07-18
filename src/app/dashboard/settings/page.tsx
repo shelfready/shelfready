@@ -9,6 +9,7 @@ import { Card, PageHeader } from "@/components/ui";
 import { SettingsForm, RotateTokenButton } from "./form";
 import { ApiKeysPanel, type KeyUsage } from "./api-keys";
 import { UsageChart } from "./usage-chart";
+import { WebhooksPanel, type WebhookRow } from "./webhooks-panel";
 
 function isoDayAgo(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000)
@@ -20,10 +21,12 @@ export default async function SettingsPage() {
   const { merchant } = await requireMerchant();
   const db = getDb();
   const scope = forMerchant(db, merchant.merchantId);
-  const [[m], keys, usageRows] = await Promise.all([
+  const [[m], keys, usageRows, hooks, deliveries] = await Promise.all([
     db.select().from(merchants).where(eq(merchants.id, merchant.merchantId)),
     scope.apiKeys.list(),
     scope.apiUsage.window(30),
+    scope.webhooks.list(),
+    scope.webhookDeliveries.list(),
   ]);
   const seller = sellerSettingsOf(m);
 
@@ -43,6 +46,34 @@ export default async function SettingsPage() {
     const day = isoDayAgo(29 - i);
     return { day, total: totalsByDay.get(day) ?? 0 };
   });
+
+  // Webhooks with their 10 most recent deliveries each.
+  const deliveriesByHook = new Map<string, typeof deliveries>();
+  for (const d of [...deliveries].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  )) {
+    const list = deliveriesByHook.get(d.webhookId) ?? [];
+    if (list.length < 10) list.push(d);
+    deliveriesByHook.set(d.webhookId, list);
+  }
+  const webhookRows: WebhookRow[] = hooks
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .map((w) => ({
+      id: w.id,
+      url: w.url,
+      events: w.events as string[],
+      enabled: w.enabled,
+      createdAt: w.createdAt.toISOString(),
+      deliveries: (deliveriesByHook.get(w.id) ?? []).map((d) => ({
+        id: d.id,
+        event: d.event,
+        status: d.status,
+        attempts: d.attempts,
+        lastError: d.lastError,
+        nextAttemptAt: d.nextAttemptAt?.toISOString() ?? null,
+        createdAt: d.createdAt.toISOString(),
+      })),
+    }));
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -91,6 +122,16 @@ export default async function SettingsPage() {
                 createdAt: k.createdAt.toISOString(),
               }))}
           />
+        </Card>
+        <Card className="lg:col-span-2">
+          <h2 className="mb-1 text-base font-semibold">Webhooks</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            We sign and deliver <code className="font-mono">sync.completed</code>,{" "}
+            <code className="font-mono">feeds.rendered</code>, and{" "}
+            <code className="font-mono">audit.completed</code> events to your
+            endpoints, with automatic retries. Signing secrets are shown once.
+          </p>
+          <WebhooksPanel initialWebhooks={webhookRows} />
         </Card>
         {keys.length > 0 && (
           <Card className="lg:col-span-2">
