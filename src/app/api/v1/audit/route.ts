@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
-import { requireApiKey } from "@/lib/api-auth";
+import { requireApiKey, withApiErrors } from "@/lib/api-auth";
 
 /** GET /api/v1/audit — latest audit run + current findings snapshot. */
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   const auth = await requireApiKey(req, "read");
   if (auth instanceof NextResponse) return auth;
 
@@ -39,3 +39,5 @@ export async function GET(req: Request) {
     },
   });
 }
+
+export const GET = withApiErrors(_GET);

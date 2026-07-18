@@ -107,7 +107,7 @@ async function parseXlsx(
 const HEADER_SYNONYMS: Record<CanonicalColumn, string[]> = {
   externalId: ["sku", "id", "itemid", "productid", "externalid", "handle"],
   title: ["title", "name", "productname", "producttitle"],
-  description: ["description", "body", "bodyhtml", "details"],
+  description: ["description", "desc", "body", "bodyhtml", "details"],
   brand: ["brand", "vendor", "manufacturer", "make"],
   url: ["url", "link", "producturl", "productlink"],
   imageUrl: ["imageurl", "image", "imagelink", "imagesrc", "picture"],

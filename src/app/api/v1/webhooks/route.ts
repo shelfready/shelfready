@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
-import { apiError, requireApiKey } from "@/lib/api-auth";
+import { apiError, requireApiKey, withApiErrors } from "@/lib/api-auth";
 import { createWebhookRecord, WEBHOOK_EVENTS } from "@/webhooks/deliver";
 
 /** GET /api/v1/webhooks — registered endpoints (never the secret). */
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   const auth = await requireApiKey(req, "read");
   if (auth instanceof NextResponse) return auth;
 
@@ -33,7 +33,7 @@ const createSchema = z.object({
 });
 
 /** POST /api/v1/webhooks — register; the signing secret appears once. */
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const auth = await requireApiKey(req, "write");
   if (auth instanceof NextResponse) return auth;
 
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
 const deleteSchema = z.object({ id: z.string().uuid() });
 
 /** DELETE /api/v1/webhooks — remove an endpoint. */
-export async function DELETE(req: Request) {
+async function _DELETE(req: Request) {
   const auth = await requireApiKey(req, "write");
   if (auth instanceof NextResponse) return auth;
 
@@ -72,3 +72,7 @@ export async function DELETE(req: Request) {
   if (removed === 0) return apiError(404, "webhook not found");
   return NextResponse.json({ data: { ok: true } });
 }
+
+export const GET = withApiErrors(_GET);
+export const POST = withApiErrors(_POST);
+export const DELETE = withApiErrors(_DELETE);

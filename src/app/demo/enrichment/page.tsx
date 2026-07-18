@@ -42,8 +42,8 @@ export default async function DemoEnrichment() {
               </div>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-lg bg-red-50 p-3 text-sm">
-                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-red-400">Current</p>
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-destructive">Current</p>
                 <p className="whitespace-pre-wrap text-foreground">
                   {proposal.currentValue ?? <em className="text-muted-foreground">empty</em>}
                 </p>

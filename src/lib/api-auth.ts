@@ -67,6 +67,29 @@ export function apiError(status: number, message: string): NextResponse {
   return NextResponse.json({ error: { status, message } }, { status });
 }
 
+type RouteHandler<A extends unknown[]> = (
+  req: Request,
+  ...args: A
+) => Promise<Response>;
+
+/**
+ * Wrap a /api/v1 handler so an unhandled exception returns the API's JSON
+ * error envelope instead of a bare empty 500 (the API's error contract
+ * applies to crashes too). The cause is logged server-side, never leaked.
+ */
+export function withApiErrors<A extends unknown[]>(
+  handler: RouteHandler<A>,
+): RouteHandler<A> {
+  return async (req, ...args) => {
+    try {
+      return await handler(req, ...args);
+    } catch (error) {
+      console.error(`[api-v1] ${req.method} ${new URL(req.url).pathname}:`, error);
+      return apiError(500, "internal error — try again or contact support");
+    }
+  };
+}
+
 /**
  * Authenticate a /api/v1 request. Returns the auth context, or a ready
  * NextResponse (401/403/429) the route must return as-is.

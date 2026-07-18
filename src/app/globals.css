@@ -128,7 +128,9 @@
   --brand-foreground: oklch(0.19 0.04 152);
   --brand-muted: oklch(0.3 0.05 152);
   --accent-amber: oklch(0.79 0.15 85);
-  --accent-amber-foreground: oklch(0.19 0.04 85);
+  /* Bright in dark mode: used as standalone warning text on dark cards and
+     on translucent amber badges — never on solid amber (indicator-only). */
+  --accent-amber-foreground: oklch(0.85 0.13 85);
 
   --sidebar: oklch(0.19 0.02 250);
   --sidebar-foreground: oklch(0.96 0.005 240);

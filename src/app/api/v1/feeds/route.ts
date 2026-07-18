@@ -4,10 +4,10 @@ import { getDb } from "@/db";
 import { merchants } from "@/db/schema";
 import { forMerchant } from "@/db/tenant";
 import { FEED_FILES, getOrCreateFeedToken } from "@/feeds/render";
-import { requireApiKey } from "@/lib/api-auth";
+import { requireApiKey, withApiErrors } from "@/lib/api-auth";
 
 /** GET /api/v1/feeds — hosted feed URLs + the last render run. */
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   const auth = await requireApiKey(req, "read");
   if (auth instanceof NextResponse) return auth;
 
@@ -44,7 +44,7 @@ export async function GET(req: Request) {
 }
 
 /** POST /api/v1/feeds — trigger a re-render of all feed artifacts. */
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const auth = await requireApiKey(req, "write");
   if (auth instanceof NextResponse) return auth;
   const { renderFeeds } = await import("@/feeds/render");
@@ -58,3 +58,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export const GET = withApiErrors(_GET);
+export const POST = withApiErrors(_POST);

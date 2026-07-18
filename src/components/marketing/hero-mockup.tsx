@@ -5,7 +5,7 @@ import { Sparkline } from '@/components/sparkline'
 import { cn } from '@/lib/utils'
 
 const feedRows = [
-  { name: 'OpenAI ACP', spec: '2025-09-12', fresh: true },
+  { name: 'OpenAI ACP', spec: 'synced 2h ago', fresh: true },
   { name: 'Google Merchant', spec: 'GMC XML', fresh: true },
   { name: 'schema.org', spec: 'JSON-LD', fresh: false },
 ]

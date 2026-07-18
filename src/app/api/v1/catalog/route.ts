@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
 import { runSyncItems } from "@/connectors/sync";
-import { apiError, requireApiKey } from "@/lib/api-auth";
+import { apiError, requireApiKey, withApiErrors } from "@/lib/api-auth";
 import "@/connectors/api";
 
 const bodySchema = z.object({
@@ -15,7 +15,7 @@ const bodySchema = z.object({
  * sync pipeline (validation → upsert), the CSV pipeline as an endpoint.
  * Items land on an auto-provisioned "API push" source.
  */
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const auth = await requireApiKey(req, "write");
   if (auth instanceof NextResponse) return auth;
 
@@ -38,3 +38,5 @@ export async function POST(req: Request) {
   );
   return NextResponse.json({ data: { run_id: runId, source_id: source.id, stats } });
 }
+
+export const POST = withApiErrors(_POST);

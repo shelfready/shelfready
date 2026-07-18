@@ -88,10 +88,17 @@ export default async function DashboardPage() {
     ]);
 
   const seller = sellerSettingsOf(merchantRow);
+  const hasSellerSettings = Boolean(
+    seller.sellerName && seller.sellerUrl && seller.storeCountry,
+  );
   const onboarding = {
     hasSource: sources.length > 0,
-    hasSellerSettings: Boolean(seller.sellerName && seller.sellerUrl && seller.storeCountry),
-    feedsRendered: runs.some((r) => r.kind === "render" && r.status === "succeeded"),
+    hasSellerSettings,
+    // A render without seller settings produces all-ineligible feeds — the
+    // step only counts once feeds are actually usable.
+    feedsRendered:
+      hasSellerSettings &&
+      runs.some((r) => r.kind === "render" && r.status === "succeeded"),
     auditRun: runs.some((r) => r.kind === "audit" && r.status === "succeeded"),
   };
 

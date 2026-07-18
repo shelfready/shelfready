@@ -11,7 +11,7 @@ const NAV = [
   { href: "/demo/enrichment", label: "Enrichment", icon: Sparkles },
 ];
 
-export const metadata = { title: "Live demo — ShelfReady" };
+export const metadata = { title: "Live demo" };
 
 export default function DemoLayout({ children }: { children: ReactNode }) {
   return (
