@@ -18,6 +18,7 @@ const columns = [
     links: [
       { label: 'Documentation', href: '/docs' },
       { label: 'OpenAPI spec', href: '/api/v1/openapi.json' },
+      { label: 'Status', href: '/status' },
       { label: 'GitHub', href: 'https://github.com/shelfready/shelfready' },
     ],
   },
