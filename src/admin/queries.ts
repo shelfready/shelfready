@@ -1,7 +1,14 @@
-import { count, desc, eq, gte, inArray } from "drizzle-orm";
+import { count, countDistinct, desc, eq, gte, inArray, sum } from "drizzle-orm";
 import type { getDb } from "@/db";
 import type { TestDb } from "@/db/test-db";
-import { memberships, merchants, products, users } from "@/db/schema";
+import {
+  apiUsage,
+  feedRuns,
+  memberships,
+  merchants,
+  products,
+  users,
+} from "@/db/schema";
 
 type AnyDb = ReturnType<typeof getDb> | TestDb;
 
@@ -19,6 +26,12 @@ export interface AdminOverview {
   skus: number;
   signups7d: number;
   signups30d: number;
+  /** Distinct merchants with a sync/render/audit run in the last 7 days. */
+  activeMerchants7d: number;
+  /** Zero-filled daily signup counts, oldest first (90 days). */
+  dailySignups: { day: string; total: number }[];
+  /** Zero-filled daily API request totals across all tenants (30 days). */
+  dailyApiRequests: { day: string; total: number }[];
   planCounts: Record<string, number>;
   recentSignups: {
     userId: string;
@@ -31,9 +44,19 @@ export interface AdminOverview {
   }[];
 }
 
+function zeroFilledDays(days: number): { day: string; total: number }[] {
+  return Array.from({ length: days }, (_, i) => ({
+    day: new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10),
+    total: 0,
+  }));
+}
+
 export async function adminOverview(db: AnyDb): Promise<AdminOverview> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
   const [
     [{ merchantCount }],
@@ -41,6 +64,9 @@ export async function adminOverview(db: AnyDb): Promise<AdminOverview> {
     [{ skuCount }],
     [{ signups7d }],
     [{ signups30d }],
+    [{ activeMerchants7d }],
+    signupDates,
+    usageByDay,
     planRows,
     signupRows,
   ] = await Promise.all([
@@ -55,6 +81,18 @@ export async function adminOverview(db: AnyDb): Promise<AdminOverview> {
       .select({ signups30d: count() })
       .from(users)
       .where(gte(users.createdAt, thirtyDaysAgo)),
+    db
+      .select({ activeMerchants7d: countDistinct(feedRuns.merchantId) })
+      .from(feedRuns)
+      .where(gte(feedRuns.startedAt, sevenDaysAgo)),
+    db
+      .select({ createdAt: users.createdAt })
+      .from(users)
+      .where(gte(users.createdAt, ninetyDaysAgo)),
+    db
+      .select({ day: apiUsage.day, total: sum(apiUsage.count) })
+      .from(apiUsage)
+      .groupBy(apiUsage.day),
     db
       .select({ plan: merchants.plan, n: count() })
       .from(merchants)
@@ -90,12 +128,29 @@ export async function adminOverview(db: AnyDb): Promise<AdminOverview> {
       : [];
   const productsByMerchant = new Map(productCounts.map((r) => [r.merchantId, r.n]));
 
+  const dailySignups = zeroFilledDays(90);
+  const signupIndex = new Map(dailySignups.map((d, i) => [d.day, i]));
+  for (const { createdAt } of signupDates) {
+    const idx = signupIndex.get(createdAt.toISOString().slice(0, 10));
+    if (idx != null) dailySignups[idx].total++;
+  }
+
+  const dailyApiRequests = zeroFilledDays(30);
+  const usageIndex = new Map(dailyApiRequests.map((d, i) => [d.day, i]));
+  for (const row of usageByDay) {
+    const idx = usageIndex.get(row.day);
+    if (idx != null) dailyApiRequests[idx].total += Number(row.total ?? 0);
+  }
+
   return {
     merchants: merchantCount,
     users: userCount,
     skus: skuCount,
     signups7d,
     signups30d,
+    activeMerchants7d,
+    dailySignups,
+    dailyApiRequests,
     planCounts: Object.fromEntries(planRows.map((r) => [r.plan, r.n])),
     recentSignups: signupRows.map((r) => ({
       userId: r.userId,

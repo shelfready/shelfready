@@ -51,3 +51,31 @@ describe("adminOverview", () => {
     expect(ownerA!.products).toBeGreaterThan(0);
   });
 });
+
+describe("adminOverview expanded metrics (#117)", () => {
+  it("computes active merchants, daily signups, and API traffic", async () => {
+    const { recordApiUsage } = await import("@/db/tenant");
+    const [key] = await tenants.a.scope.apiKeys.insert([
+      { name: "m-key", prefix: "sr_mmmm", keyHash: "hash-m", scopes: ["read"] },
+    ]);
+    await recordApiUsage(db, tenants.a.merchant.id, key.id, "products");
+    await recordApiUsage(db, tenants.a.merchant.id, key.id, "products");
+    await tenants.b.scope.feedRuns.insert([{ kind: "sync", status: "succeeded" }]);
+
+    const data = await adminOverview(db);
+
+    // Both demo tenants have seeded/inserted runs within 7d.
+    expect(data.activeMerchants7d).toBeGreaterThanOrEqual(1);
+
+    expect(data.dailySignups).toHaveLength(90);
+    const today = new Date().toISOString().slice(0, 10);
+    const todaySignups = data.dailySignups.find((d) => d.day === today);
+    expect(todaySignups!.total).toBeGreaterThanOrEqual(1);
+    // Zero-filled and ordered oldest → newest.
+    expect(data.dailySignups[0].day < data.dailySignups[89].day).toBe(true);
+
+    expect(data.dailyApiRequests).toHaveLength(30);
+    const todayApi = data.dailyApiRequests.find((d) => d.day === today);
+    expect(todayApi!.total).toBe(2);
+  });
+});

@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { PLANS, isPlanId } from "@/billing/plans";
 import { timeAgo } from "@/lib/time";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { BarChart } from "@/components/bar-chart";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -26,7 +27,7 @@ export default async function AdminOverviewPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          The whole business at a glance. Expanded metrics land with #117.
+          The whole business at a glance.
         </p>
       </div>
 
@@ -46,10 +47,10 @@ export default async function AdminOverviewPage() {
           accent="brand"
         />
         <StatCard
-          label="Signups (7d)"
-          value={data.signups7d.toLocaleString()}
+          label="Active merchants (7d)"
+          value={data.activeMerchants7d.toLocaleString()}
           icon={<TrendingUp className="size-4" />}
-          hint={`${data.signups30d} in 30d`}
+          hint={`synced, rendered, or audited · ${paying > 0 && data.merchants > 0 ? Math.round((paying / data.merchants) * 100) : 0}% paid conversion`}
           accent="primary"
         />
         <StatCard
@@ -59,6 +60,31 @@ export default async function AdminOverviewPage() {
           hint="across all catalogs"
           accent="neutral"
         />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-6">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Registrations</h2>
+            <span className="text-sm tabular-nums text-muted-foreground">
+              {data.signups30d.toLocaleString()} / 30d
+            </span>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">New users per day, last 90 days.</p>
+          <BarChart days={data.dailySignups} label="User registrations per day, last 90 days" />
+        </Card>
+        <Card className="p-6">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-sm font-semibold">API traffic</h2>
+            <span className="text-sm tabular-nums text-muted-foreground">
+              {data.dailyApiRequests.reduce((s, d) => s + d.total, 0).toLocaleString()} / 30d
+            </span>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Authenticated /api/v1 requests per day across all tenants.
+          </p>
+          <BarChart days={data.dailyApiRequests} label="API requests per day, last 30 days" />
+        </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
