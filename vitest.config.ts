@@ -9,5 +9,8 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts"],
+    // PGlite (in-process Postgres WASM) can take >10s to boot in beforeAll
+    // when many workers cold-start it behind an invalidated Vite cache.
+    hookTimeout: 30_000,
   },
 });
