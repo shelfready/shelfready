@@ -1,6 +1,9 @@
+import { eq } from "drizzle-orm";
 import type { getDb } from "@/db";
 import type { TestDb } from "@/db/test-db";
+import { merchants } from "@/db/schema";
 import { forMerchant } from "@/db/tenant";
+import { maxSkusFor } from "@/billing/plans";
 import { decryptJson, encryptJson } from "@/lib/crypto";
 import { validateProduct, type ValidationIssue } from "@/model/product";
 import { getConnector } from "./registry";
@@ -15,6 +18,9 @@ export interface SyncStats {
   rejected: number;
   warnings: number;
   rejections: { externalId: string | null; issues: ValidationIssue[] }[];
+  /** Items skipped because the plan's SKU cap was reached (issue #122). */
+  capped: number;
+  maxSkus?: number;
 }
 
 /** The only writer of sources.credentials_enc — always ciphertext. */
@@ -91,7 +97,24 @@ export async function runSyncItems(
     rejected: 0,
     warnings: 0,
     rejections: [],
+    capped: 0,
   };
+
+  // Plan SKU cap (issue #122): updates to already-imported SKUs always go
+  // through (never break a live catalog); only NEW SKUs count against the
+  // cap. Enforced here so every ingest path — pull connectors, API push,
+  // CSV upload — shares one gate.
+  const [merchantRow] = await db
+    .select()
+    .from(merchants)
+    .where(eq(merchants.id, merchantId));
+  const maxSkus = maxSkusFor(merchantRow);
+  stats.maxSkus = maxSkus;
+  const existing = await scope.products.list();
+  const knownIds = new Set(
+    existing.filter((p) => p.sourceId === sourceId).map((p) => p.externalId),
+  );
+  let totalSkus = existing.length;
 
   try {
     for await (const raw of items) {
@@ -109,6 +132,16 @@ export async function runSyncItems(
           stats.rejections.push({ externalId, issues });
         }
         continue;
+      }
+
+      const isNewSku = !knownIds.has(product.externalId);
+      if (isNewSku && totalSkus >= maxSkus) {
+        stats.capped++;
+        continue;
+      }
+      if (isNewSku) {
+        knownIds.add(product.externalId);
+        totalSkus++;
       }
 
       const row = await scope.products.upsertByExternalId(sourceId, {

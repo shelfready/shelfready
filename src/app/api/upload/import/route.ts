@@ -7,7 +7,7 @@ import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
 import { parseUpload, rowToCanonical, CANONICAL_COLUMNS, type CsvMapping } from "@/connectors/csv";
 import { runSyncItems } from "@/connectors/sync";
-import { PLANS, type Entitlements } from "@/billing/plans";
+import { maxSkusFor } from "@/billing/plans";
 import "@/connectors/csv"; // ensure csv connector registration
 
 const mappingSchema = z.object({
@@ -54,8 +54,7 @@ export async function POST(req: Request) {
     .select()
     .from(merchants)
     .where(eq(merchants.id, merchant.merchantId));
-  const maxSkus =
-    (m.entitlements as Partial<Entitlements>).maxSkus ?? PLANS.free.maxSkus;
+  const maxSkus = maxSkusFor(m);
   if (rows.length > maxSkus) {
     return NextResponse.json(
       {

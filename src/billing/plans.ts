@@ -32,3 +32,11 @@ export function entitlementsFor(plan: PlanId): Entitlements {
     freshnessMonitoring: plan !== "free",
   };
 }
+
+/** Effective SKU cap for a merchant row: Stripe-webhook-set entitlements
+ * win; otherwise the plan's default (free if the plan string is unknown). */
+export function maxSkusFor(m: { plan: string; entitlements: unknown }): number {
+  const fromEntitlements = (m.entitlements as Partial<Entitlements>)?.maxSkus;
+  if (typeof fromEntitlements === "number") return fromEntitlements;
+  return PLANS[isPlanId(m.plan) ? m.plan : "free"].maxSkus;
+}
