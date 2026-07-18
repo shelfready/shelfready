@@ -12,8 +12,8 @@ import { Badge, Card, PageHeader } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 const GRADE_COLOR: Record<string, string> = {
-  A: "text-brand-700", B: "text-brand-600", C: "text-amber-600",
-  D: "text-orange-600", F: "text-red-600",
+  A: "text-primary", B: "text-primary", C: "text-accent-amber-foreground",
+  D: "text-accent-amber-foreground", F: "text-destructive",
 };
 const SEVERITY_TONE = { error: "danger", warning: "warning", info: "neutral" } as const;
 
@@ -50,15 +50,15 @@ export default async function DemoAudit() {
           <span className={`text-5xl font-bold ${GRADE_COLOR[audit.grade]}`}>{audit.grade}</span>
           <div>
             <p className="text-2xl font-semibold">{audit.catalogScore}/100</p>
-            <p className="text-sm text-slate-500">catalog score</p>
+            <p className="text-sm text-muted-foreground">catalog score</p>
           </div>
         </Card>
         <Card>
-          <p className="text-sm text-slate-500">Items audited</p>
+          <p className="text-sm text-muted-foreground">Items audited</p>
           <p className="mt-1 text-2xl font-semibold">{audit.items.length}</p>
         </Card>
         <Card>
-          <p className="text-sm text-slate-500">Open findings</p>
+          <p className="text-sm text-muted-foreground">Open findings</p>
           <p className="mt-1 text-2xl font-semibold">
             {audit.items.reduce((s, i) => s + i.findings.length, 0)}
           </p>
@@ -72,15 +72,15 @@ export default async function DemoAudit() {
               <li key={code} className="flex items-start justify-between gap-3 text-sm">
                 <div>
                   <Badge tone={SEVERITY_TONE[agg.severity]}>{code}</Badge>
-                  <p className="mt-1 text-slate-600">{agg.message}</p>
+                  <p className="mt-1 text-muted-foreground">{agg.message}</p>
                 </div>
-                <span className="shrink-0 text-slate-500">{agg.count} items</span>
+                <span className="shrink-0 text-muted-foreground">{agg.count} items</span>
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="mt-4 text-sm text-muted-foreground">
             Several of these are fixable automatically —{" "}
-            <Link href="/demo/enrichment" className="text-brand-700 underline">
+            <Link href="/demo/enrichment" className="text-primary underline">
               see Claude&apos;s proposed fixes →
             </Link>
           </p>
@@ -89,7 +89,7 @@ export default async function DemoAudit() {
           <h2 className="px-4 pt-4 text-base font-semibold">Lowest-scoring items</h2>
           <table className="mt-2 w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th className="px-4 py-2">Item</th>
                 <th className="px-4 py-2 text-right">Score</th>
                 <th className="px-4 py-2">Top issues</th>
@@ -97,10 +97,10 @@ export default async function DemoAudit() {
             </thead>
             <tbody>
               {worst.map(({ entry, findings, score }) => (
-                <tr key={entry.itemId} className="border-b border-slate-100 align-top last:border-0">
+                <tr key={entry.itemId} className="border-b border-border/60 align-top last:border-0">
                   <td className="px-4 py-2 font-mono text-xs">{entry.itemId}</td>
                   <td className="px-4 py-2 text-right tabular-nums">{score}</td>
-                  <td className="px-4 py-2 text-xs text-slate-500">
+                  <td className="px-4 py-2 text-xs text-muted-foreground">
                     {findings.slice(0, 3).map((f) => f.code).join(", ") || "—"}
                   </td>
                 </tr>

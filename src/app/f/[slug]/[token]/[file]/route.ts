@@ -33,8 +33,15 @@ export async function GET(
     .where(eq(merchants.slug, slug));
   if (!merchant || !tokenMatches(merchant.feedToken, token)) return NOT_FOUND();
 
-  const artifact = await getArtifactStore().get(`${merchant.id}/${file}`);
-  if (!artifact) return NOT_FOUND();
+  let artifact = await getArtifactStore().get(`${merchant.id}/${file}`);
+  if (!artifact) {
+    // Self-heal: the token authenticated, so a missing artifact means the
+    // store lost it (fresh environment, wiped volume) — re-render once.
+    const { renderFeedsSafely } = await import("@/feeds/render");
+    await renderFeedsSafely(db, merchant.id);
+    artifact = await getArtifactStore().get(`${merchant.id}/${file}`);
+    if (!artifact) return NOT_FOUND();
+  }
 
   return new Response(artifact.body, {
     headers: {

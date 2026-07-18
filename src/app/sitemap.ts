@@ -1,12 +1,22 @@
 import type { MetadataRoute } from "next";
+import { docsNav } from "@/lib/docs-nav";
 
 const BASE = "https://useshelfready.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  // Every docs page from the nav — the docs sidebar is the source of truth.
+  const docs: MetadataRoute.Sitemap = docsNav
+    .flatMap((section) => section.items)
+    .map(({ href }) => ({
+      url: `${BASE}${href}`,
+      changeFrequency: "weekly",
+      priority: href === "/docs" ? 0.7 : 0.5,
+    }));
+
   return [
     { url: `${BASE}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/demo`, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${BASE}/docs`, changeFrequency: "weekly", priority: 0.7 },
+    ...docs,
     { url: `${BASE}/status`, changeFrequency: "daily", priority: 0.4 },
     { url: `${BASE}/about`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE}/blog`, changeFrequency: "weekly", priority: 0.6 },

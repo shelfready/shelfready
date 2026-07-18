@@ -193,18 +193,3 @@
     scroll-behavior: auto !important;
   }
 }
-
-/* ------------------------------------------------------------------ */
-/* Transitional: legacy brand scale used by not-yet-ported pages.     */
-/* Remove with #99 once every page is on the semantic token system.   */
-/* ------------------------------------------------------------------ */
-@theme {
-  --color-brand-50: #f0fdf4;
-  --color-brand-100: #dcfce7;
-  --color-brand-200: #bbf7d0;
-  --color-brand-500: #22c55e;
-  --color-brand-600: #16a34a;
-  --color-brand-700: #15803d;
-  --color-brand-800: #166534;
-  --color-brand-900: #14532d;
-}

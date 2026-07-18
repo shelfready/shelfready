@@ -32,13 +32,13 @@ export default async function DemoFeeds() {
             <Card key={file} className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium">{SURFACES[file]}</p>
-                <p className="truncate font-mono text-xs text-slate-500">{url}</p>
+                <p className="truncate font-mono text-xs text-muted-foreground">{url}</p>
               </div>
               <a
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
               >
                 Open feed ↗
               </a>
@@ -46,7 +46,7 @@ export default async function DemoFeeds() {
           );
         })}
       </div>
-      <p className="mt-6 text-xs text-slate-400">
+      <p className="mt-6 text-xs text-muted-foreground">
         For your own store these URLs carry a private, rotatable token and
         regenerate automatically on every catalog sync.
       </p>
