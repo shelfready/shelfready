@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { OPENAPI_DOCUMENT } from "./route";
@@ -31,6 +31,23 @@ describe("openapi spec", () => {
     const actual = routePaths(dir, "/api/v1").sort();
     const documented = Object.keys(OPENAPI_DOCUMENT.paths).sort();
     expect(documented).toEqual(actual);
+  });
+
+  it("every spec path is covered by a docs page under /docs/api", () => {
+    const docsApiDir = join(__dirname, "../../../docs/api");
+    const pages: string[] = [];
+    const collect = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) collect(full);
+        else if (entry.startsWith("page.")) pages.push(readFileSync(full, "utf8"));
+      }
+    };
+    collect(docsApiDir);
+    const allDocs = pages.join("\n");
+    for (const path of Object.keys(OPENAPI_DOCUMENT.paths)) {
+      expect(allDocs, `no docs page under src/app/docs/api mentions ${path}`).toContain(path);
+    }
   });
 
   it("every operation documents auth failures and references resolvable schemas", () => {
