@@ -35,3 +35,14 @@ export const driftChecker = inngest.createFunction(
     return runScheduledDriftChecks(getDb());
   },
 );
+
+/** Nightly API-usage retention: drop counters older than 90 days (#108). */
+export const usagePruner = inngest.createFunction(
+  { id: "usage-pruner", triggers: [cron("15 4 * * *")] },
+  async () => {
+    const { getDb } = await import("@/db");
+    const { pruneApiUsage } = await import("@/db/tenant");
+    await pruneApiUsage(getDb());
+    return { ok: true };
+  },
+);

@@ -371,6 +371,69 @@ export const OPENAPI_DOCUMENT = {
         },
       },
     },
+    "/api/v1/usage": {
+      get: {
+        operationId: "getUsage",
+        summary: "API usage",
+        description:
+          "Daily request counts for your merchant over the trailing 30 days (per-endpoint breakdown per day) plus per-key 7-day/30-day totals. Counters increment on every successfully authenticated request and are retained for 90 days. Requires the `read` scope.",
+        responses: {
+          "200": {
+            description: "Usage report",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    data: {
+                      type: "object",
+                      properties: {
+                        window_days: { type: "integer" },
+                        days: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              day: { type: "string", format: "date" },
+                              total: { type: "integer" },
+                              endpoints: {
+                                type: "object",
+                                additionalProperties: { type: "integer" },
+                              },
+                            },
+                          },
+                        },
+                        keys: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string", format: "uuid" },
+                              name: { type: "string" },
+                              prefix: { type: "string" },
+                              revoked: { type: "boolean" },
+                              requests_7d: { type: "integer" },
+                              requests_30d: { type: "integer" },
+                            },
+                          },
+                        },
+                      },
+                    },
+                    rate_limit: {
+                      type: "object",
+                      properties: {
+                        requests_per_minute: { type: "integer" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          ...AUTH_RESPONSES,
+        },
+      },
+    },
     "/api/v1/webhooks": {
       get: {
         operationId: "listWebhooks",

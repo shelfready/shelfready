@@ -13,7 +13,16 @@ export interface KeyRow {
   createdAt: string;
 }
 
-export function ApiKeysPanel({ initialKeys }: { initialKeys: KeyRow[] }) {
+/** Per-key request totals, computed server-side from api_usage (#108). */
+export type KeyUsage = Record<string, { requests7d: number; requests30d: number }>;
+
+export function ApiKeysPanel({
+  initialKeys,
+  usage = {},
+}: {
+  initialKeys: KeyRow[];
+  usage?: KeyUsage;
+}) {
   const [keys, setKeys] = useState<KeyRow[]>(initialKeys);
   const [name, setName] = useState("");
   const [created, setCreated] = useState<{ key: string } | null>(null);
@@ -91,6 +100,8 @@ export function ApiKeysPanel({ initialKeys }: { initialKeys: KeyRow[] }) {
               <th className="py-2 pr-2">Name</th>
               <th className="py-2 pr-2">Key</th>
               <th className="py-2 pr-2">Last used</th>
+              <th className="py-2 pr-2 text-right">7d</th>
+              <th className="py-2 pr-2 text-right">30d</th>
               <th className="py-2" />
             </tr>
           </thead>
@@ -103,6 +114,12 @@ export function ApiKeysPanel({ initialKeys }: { initialKeys: KeyRow[] }) {
                   {k.lastUsedAt
                     ? new Date(k.lastUsedAt).toLocaleString("en-GB", { timeZone: "UTC" }) + " UTC"
                     : "never"}
+                </td>
+                <td className="py-2 pr-2 text-right tabular-nums text-muted-foreground">
+                  {(usage[k.id]?.requests7d ?? 0).toLocaleString()}
+                </td>
+                <td className="py-2 pr-2 text-right tabular-nums text-muted-foreground">
+                  {(usage[k.id]?.requests30d ?? 0).toLocaleString()}
                 </td>
                 <td className="py-2 text-right">
                   {k.revokedAt ? (
