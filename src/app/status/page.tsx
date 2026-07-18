@@ -10,7 +10,9 @@ export const metadata: Metadata = {
   description: "Live status and uptime history for ShelfReady systems.",
 };
 
-export const revalidate = 300;
+// DB-backed — rendered per request (no DB at build time); the report
+// itself is cheap and /api/status carries the cacheable variant.
+export const dynamic = "force-dynamic";
 
 export default async function StatusPage() {
   const report = await getStatusReport(getDb());
@@ -59,7 +61,7 @@ export default async function StatusPage() {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}{" "}
-                UTC · refreshes every 5 minutes
+                UTC · live
               </p>
             </div>
           </div>

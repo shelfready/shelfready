@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { getStatusReport } from "@/status/health";
 
+export const dynamic = "force-dynamic";
+
 /** Public machine-readable status (uptime bots, dashboards). */
 export async function GET() {
   const report = await getStatusReport(getDb());
