@@ -31,6 +31,9 @@ services:
         condition: service_healthy
     expose:
       - "3000"
+    # Feed artifacts survive restarts (FsStore until R2 lands, issue #16).
+    volumes:
+      - artifacts_staging:/app/.artifacts
 
   migrate:
     image: ghcr.io/shelfready/shelfready-migrate:${IMAGE_TAG:-latest}
@@ -55,6 +58,8 @@ services:
         condition: service_healthy
     expose:
       - "3000"
+    volumes:
+      - artifacts_prod:/app/.artifacts
 
   migrate-prod:
     image: ghcr.io/shelfready/shelfready-migrate:${PROD_IMAGE_TAG:-latest}
@@ -119,3 +124,5 @@ volumes:
   pg_data:
   caddy_data:
   caddy_config:
+  artifacts_staging:
+  artifacts_prod:
