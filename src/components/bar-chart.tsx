@@ -1,11 +1,13 @@
 import { cn } from "@/lib/utils";
 
-/** 30-day API usage bar chart (server-rendered SVG, v0 tokens). */
-export function UsageChart({
+/** Daily-series bar chart (server-rendered SVG, v0 tokens). */
+export function BarChart({
   days,
+  label = "per day",
   className,
 }: {
   days: { day: string; total: number }[];
+  label?: string;
   className?: string;
 }) {
   const width = 600;
@@ -19,7 +21,7 @@ export function UsageChart({
         viewBox={`0 0 ${width} ${height}`}
         className="h-32 w-full"
         role="img"
-        aria-label="API requests per day, last 30 days"
+        aria-label={label}
       >
         {days.map((d, i) => {
           const h = Math.max(d.total > 0 ? 3 : 1, (d.total / max) * (height - 8));

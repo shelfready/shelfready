@@ -8,7 +8,7 @@ import { sellerSettingsOf } from "@/feeds/render";
 import { Card, PageHeader } from "@/components/ui";
 import { SettingsForm, RotateTokenButton } from "./form";
 import { ApiKeysPanel, type KeyUsage } from "./api-keys";
-import { UsageChart } from "./usage-chart";
+import { BarChart } from "@/components/bar-chart";
 import { WebhooksPanel, type WebhookRow } from "./webhooks-panel";
 
 function isoDayAgo(days: number): string {
@@ -155,7 +155,7 @@ export default async function SettingsPage() {
                 used.
               </p>
             ) : (
-              <UsageChart days={days} />
+              <BarChart days={days} label="API requests per day, last 30 days" />
             )}
           </Card>
         )}
