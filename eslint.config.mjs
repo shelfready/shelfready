@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Raw v0 export — reference material, ported piecemeal in M10.
+    "shelf-ready-landing-page/**",
   ]),
 ]);
 
