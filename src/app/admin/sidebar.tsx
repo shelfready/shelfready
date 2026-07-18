@@ -13,7 +13,7 @@ const nav = [
   { title: "Status", href: "/admin/status", icon: Activity },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ newMessages = 0 }: { newMessages?: number }) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -48,6 +48,11 @@ export function AdminSidebar() {
             >
               <item.icon className="size-4" />
               {item.title}
+              {item.href === "/admin/support" && newMessages > 0 && (
+                <span className="ml-auto rounded-full bg-accent-amber/20 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-accent-amber-foreground">
+                  {newMessages}
+                </span>
+              )}
             </Link>
           );
         })}

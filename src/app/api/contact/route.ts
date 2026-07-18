@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getDb } from "@/db";
+import { contactMessages } from "@/db/schema";
 
-/** Contact form → email. Rate limited per IP; honeypot-free but capped. */
+/** Contact form → stored in the DB first (admin inbox, issue #119),
+ * then emailed. Rate limited per IP; a failed send never loses the
+ * message. */
 
 const bodySchema = z.object({
   name: z.string().min(1).max(200),
@@ -41,24 +45,22 @@ export async function POST(req: Request) {
   }
   const { name, email, topic, message } = parsed.data;
 
-  const { emailConfigured, sendEmail } = await import("@/lib/email");
-  if (!emailConfigured()) {
-    console.log(`[contact] (email not configured) from ${name} <${email}>: ${message}`);
-    return NextResponse.json({ ok: true });
-  }
+  // Store first — once this row exists the message cannot be lost.
+  await getDb()
+    .insert(contactMessages)
+    .values({ name, email, topic: topic ?? null, message });
 
-  try {
+  // Email is best-effort on top of the stored copy.
+  const { emailConfigured, sendEmail } = await import("@/lib/email");
+  if (emailConfigured()) {
     await sendEmail({
       to: process.env.CONTACT_EMAIL ?? "support@useshelfready.com",
       subject: `[contact] ${topic ?? "General"} — ${name}`,
       text: `From: ${name} <${email}>\nTopic: ${topic ?? "General"}\n\n${message}`,
       replyTo: email,
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Could not send right now — email support@useshelfready.com directly." },
-      { status: 502 },
-    );
+    }).catch((e) => console.error("[contact] email forward failed:", e));
+  } else {
+    console.log(`[contact] (email not configured) stored message from ${name} <${email}>`);
   }
   return NextResponse.json({ ok: true });
 }
