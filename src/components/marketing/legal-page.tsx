@@ -32,8 +32,8 @@ export function LegalPage({
           ))}
           <hr />
           <p className="text-sm">
-            This page is provided for a product demo and is not legal advice. Replace it with your
-            own reviewed policy before going to production.
+            Questions about this policy? Contact{" "}
+            <a href="mailto:support@useshelfready.com">support@useshelfready.com</a>.
           </p>
         </div>
       </section>
