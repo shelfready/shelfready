@@ -11,6 +11,8 @@ export interface SendEmailOptions {
   subject: string;
   html?: string;
   text?: string;
+  /** Reply-To — used by the contact form so replies reach the sender. */
+  replyTo?: string;
 }
 
 export function emailConfigured(): boolean {
@@ -33,6 +35,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ id: string }>
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
+      ...(opts.replyTo ? { reply_to: [opts.replyTo] } : {}),
     }),
   });
   if (!res.ok) {

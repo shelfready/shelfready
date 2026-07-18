@@ -17,14 +17,21 @@ const columns = [
     title: 'Developers',
     links: [
       { label: 'Documentation', href: '/docs' },
+      { label: 'API reference', href: '/docs/api/products' },
+      { label: 'Webhooks', href: '/docs/api/webhooks' },
       { label: 'OpenAPI spec', href: '/api/v1/openapi.json' },
       { label: 'Status', href: '/status' },
-      { label: 'GitHub', href: 'https://github.com/shelfready/shelfready' },
     ],
   },
   {
-    title: 'Contact',
-    links: [{ label: 'support@useshelfready.com', href: 'mailto:support@useshelfready.com' }],
+    title: 'Company',
+    links: [
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Changelog', href: '/changelog' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Careers', href: '/careers' },
+    ],
   },
   {
     title: 'Legal',
