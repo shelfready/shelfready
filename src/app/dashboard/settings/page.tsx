@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { merchants } from "@/db/schema";
@@ -6,15 +7,42 @@ import { requireMerchant } from "@/lib/require-merchant";
 import { sellerSettingsOf } from "@/feeds/render";
 import { Card, PageHeader } from "@/components/ui";
 import { SettingsForm, RotateTokenButton } from "./form";
-import { ApiKeysPanel } from "./api-keys";
+import { ApiKeysPanel, type KeyUsage } from "./api-keys";
+import { UsageChart } from "./usage-chart";
+
+function isoDayAgo(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+}
 
 export default async function SettingsPage() {
   const { merchant } = await requireMerchant();
-  const [m] = await getDb()
-    .select()
-    .from(merchants)
-    .where(eq(merchants.id, merchant.merchantId));
+  const db = getDb();
+  const scope = forMerchant(db, merchant.merchantId);
+  const [[m], keys, usageRows] = await Promise.all([
+    db.select().from(merchants).where(eq(merchants.id, merchant.merchantId)),
+    scope.apiKeys.list(),
+    scope.apiUsage.window(30),
+  ]);
   const seller = sellerSettingsOf(m);
+
+  // Per-key 7d/30d totals + zero-filled 30-day series for the chart.
+  const sevenDaysAgo = isoDayAgo(7);
+  const usage: KeyUsage = {};
+  const totalsByDay = new Map<string, number>();
+  let total30d = 0;
+  for (const row of usageRows) {
+    const k = (usage[row.apiKeyId] ??= { requests7d: 0, requests30d: 0 });
+    k.requests30d += row.count;
+    if (row.day >= sevenDaysAgo) k.requests7d += row.count;
+    totalsByDay.set(row.day, (totalsByDay.get(row.day) ?? 0) + row.count);
+    total30d += row.count;
+  }
+  const days = Array.from({ length: 30 }, (_, i) => {
+    const day = isoDayAgo(29 - i);
+    return { day, total: totalsByDay.get(day) ?? 0 };
+  });
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -50,7 +78,8 @@ export default async function SettingsPage() {
             hashed at rest and shown once at creation.
           </p>
           <ApiKeysPanel
-            initialKeys={(await forMerchant(getDb(), merchant.merchantId).apiKeys.list())
+            usage={usage}
+            initialKeys={keys
               .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
               .map((k) => ({
                 id: k.id,
@@ -63,6 +92,32 @@ export default async function SettingsPage() {
               }))}
           />
         </Card>
+        {keys.length > 0 && (
+          <Card className="lg:col-span-2">
+            <div className="mb-1 flex items-center justify-between">
+              <h2 className="text-base font-semibold">API usage</h2>
+              <span className="text-sm tabular-nums text-muted-foreground">
+                {total30d.toLocaleString()} requests / 30 days
+              </span>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Authenticated requests per day across all keys — limit is 60
+              requests/minute per key. Also available as{" "}
+              <Link href="/docs/api/usage" className="underline hover:text-foreground">
+                <code className="font-mono">GET /api/v1/usage</code>
+              </Link>
+              .
+            </p>
+            {total30d === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No API requests yet — counts appear here as soon as a key is
+                used.
+              </p>
+            ) : (
+              <UsageChart days={days} />
+            )}
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -29,6 +29,7 @@ export const docsNav: DocSection[] = [
       { title: "Audits", href: "/docs/api/audits" },
       { title: "Feeds", href: "/docs/api/feeds" },
       { title: "Webhooks", href: "/docs/api/webhooks" },
+      { title: "Usage", href: "/docs/api/usage" },
     ],
   },
 ]

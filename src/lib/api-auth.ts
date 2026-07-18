@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { findMerchantByApiKeyHash } from "@/db/tenant";
+import { findMerchantByApiKeyHash, recordApiUsage } from "@/db/tenant";
 
 /**
  * Merchant API-key auth for /api/v1 (#58). Keys look like sr_<64 hex>,
@@ -114,5 +114,11 @@ export async function requireApiKey(
     res.headers.set("Retry-After", String(limit.retryAfterSec));
     return res;
   }
+  // Usage analytics (issue #108) — fire-and-forget so a counter hiccup
+  // never fails or slows the request itself.
+  const group = new URL(req.url).pathname.split("/")[3] ?? "unknown";
+  void recordApiUsage(getDb(), auth.merchantId, auth.keyId, group).catch(
+    () => undefined,
+  );
   return auth;
 }

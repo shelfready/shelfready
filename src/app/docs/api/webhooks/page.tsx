@@ -54,6 +54,7 @@ export default function ApiWebhooksPage() {
       description="Subscribe to events so your systems react the moment syncs, renders, and audits complete."
       toc={[...toc]}
       prev={{ title: "Feeds", href: "/docs/api/feeds" }}
+      next={{ title: "Usage", href: "/docs/api/usage" }}
     >
       <h2 id="events">Event types</h2>
       <div className="mt-4 overflow-hidden rounded-lg border border-border">

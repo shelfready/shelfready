@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -394,5 +395,28 @@ export const apiKeys = pgTable(
   (t) => [
     index("api_keys_merchant_idx").on(t.merchantId),
     uniqueIndex("api_keys_hash_uq").on(t.keyHash),
+  ],
+);
+
+// Per-key daily API usage counters (issue #108): one row per
+// (api_key, day, endpoint group), incremented fire-and-forget on every
+// successfully authenticated /api/v1 request. Pruned after 90 days.
+export const apiUsage = pgTable(
+  "api_usage",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    merchantId: uuid("merchant_id")
+      .notNull()
+      .references(() => merchants.id, { onDelete: "cascade" }),
+    apiKeyId: uuid("api_key_id")
+      .notNull()
+      .references(() => apiKeys.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    endpoint: text("endpoint").notNull(), // 'products' | 'catalog' | 'syncs' | 'feeds' | 'audit' | 'webhooks' | 'usage'
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex("api_usage_key_day_endpoint_uq").on(t.apiKeyId, t.day, t.endpoint),
+    index("api_usage_merchant_idx").on(t.merchantId),
   ],
 );

@@ -1,9 +1,10 @@
-import { and, eq, ilike, or } from "drizzle-orm";
+import { and, eq, gte, ilike, lt, or, sql } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { getDb } from "./index";
 import type { TestDb } from "./test-db";
 import {
   apiKeys,
+  apiUsage,
   auditFindings,
   feedRuns,
   products,
@@ -141,6 +142,22 @@ export function forMerchant(db: AnyDb, merchantId: string) {
     },
     sources: scoped(db, merchantId, sources),
     apiKeys: scoped(db, merchantId, apiKeys),
+    apiUsage: {
+      ...scoped(db, merchantId, apiUsage),
+      /** Usage rows for the trailing `days` window, oldest day first. */
+      window: async (days: number) => {
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        return db
+          .select()
+          .from(apiUsage)
+          .where(
+            and(eq(apiUsage.merchantId, merchantId), gte(apiUsage.day, since)),
+          )
+          .orderBy(apiUsage.day);
+      },
+    },
     webhooks: scoped(db, merchantId, webhooks),
     webhookDeliveries: scoped(db, merchantId, webhookDeliveries),
     feedRuns: scoped(db, merchantId, feedRuns),
@@ -191,4 +208,34 @@ export async function findMerchantByApiKeyHash(
     keyId: row.id,
     scopes: (row.scopes as string[]) ?? [],
   };
+}
+
+/**
+ * Increment today's usage counter for a key (issue #108). Called
+ * fire-and-forget from requireApiKey after successful auth — merchantId
+ * comes from the resolved key, so the write is tenant-scoped by
+ * construction.
+ */
+export async function recordApiUsage(
+  db: AnyDb,
+  merchantId: string,
+  apiKeyId: string,
+  endpoint: string,
+  day = new Date().toISOString().slice(0, 10),
+): Promise<void> {
+  await db
+    .insert(apiUsage)
+    .values({ merchantId, apiKeyId, day, endpoint, count: 1 })
+    .onConflictDoUpdate({
+      target: [apiUsage.apiKeyId, apiUsage.day, apiUsage.endpoint],
+      set: { count: sql`${apiUsage.count} + 1` },
+    });
+}
+
+/** Retention: drop usage rows older than `days` (cron, all tenants). */
+export async function pruneApiUsage(db: AnyDb, days = 90): Promise<void> {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  await db.delete(apiUsage).where(lt(apiUsage.day, cutoff));
 }
