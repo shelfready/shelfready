@@ -2,24 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Spinner } from "@/components/ui";
-
-export function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <Button
-      variant="secondary"
-      size="sm"
-      onClick={() => {
-        void navigator.clipboard.writeText(new URL(value, location.origin).href);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      }}
-    >
-      {copied ? "Copied!" : "Copy URL"}
-    </Button>
-  );
-}
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function RenderNowButton() {
   const router = useRouter();
@@ -38,10 +22,10 @@ export function RenderNowButton() {
 
   return (
     <div className="flex items-center gap-2">
-      {error && <span className="text-sm text-red-600">{error}</span>}
-      <Button size="sm" onClick={() => void render()} disabled={busy}>
-        {busy ? <Spinner /> : null}
-        {busy ? "Rendering…" : "Render now"}
+      {error && <span className="text-sm text-destructive">{error}</span>}
+      <Button onClick={() => void render()} disabled={busy}>
+        {busy ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+        {busy ? "Rendering…" : "Render all"}
       </Button>
     </div>
   );

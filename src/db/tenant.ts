@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, ilike, or } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { getDb } from "./index";
 import type { TestDb } from "./test-db";
@@ -98,6 +98,24 @@ export function forMerchant(db: AnyDb, merchantId: string) {
           })
           .returning();
         return row;
+      },
+      /** Topbar global search: title/SKU/brand substring match. */
+      search: async (query: string, limit = 8) => {
+        const pattern = `%${query.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
+        return db
+          .select()
+          .from(products)
+          .where(
+            and(
+              eq(products.merchantId, merchantId),
+              or(
+                ilike(products.title, pattern),
+                ilike(products.externalId, pattern),
+                ilike(products.brand, pattern),
+              ),
+            ),
+          )
+          .limit(limit);
       },
     },
     variants: {

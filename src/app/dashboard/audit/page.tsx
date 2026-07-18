@@ -7,22 +7,11 @@ import { requireMerchant } from "@/lib/require-merchant";
 import { expandCatalog } from "@/feeds/expand";
 import { sellerSettingsOf } from "@/feeds/render";
 import { auditCatalog } from "@/audit/rules";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
-import { ReAuditButton } from "./actions";
-
-const GRADE_COLOR: Record<string, string> = {
-  A: "text-brand-700",
-  B: "text-brand-600",
-  C: "text-amber-600",
-  D: "text-orange-600",
-  F: "text-red-600",
-};
-
-const SEVERITY_TONE = {
-  error: "danger",
-  warning: "warning",
-  info: "neutral",
-} as const;
+import { RULE_CATALOG } from "@/audit/rule-catalog";
+import { Card } from "@/components/ui/card";
+import { LinkButton } from "@/components/link-button";
+import { AuditTable, type RuleRow } from "./audit-table";
+import { ExportCsvButton, ReAuditButton } from "./actions";
 
 export default async function AuditPage() {
   const { merchant } = await requireMerchant();
@@ -39,21 +28,17 @@ export default async function AuditPage() {
 
   if (productRows.length === 0) {
     return (
-      <>
-        <PageHeader title="Agent-readiness audit" />
-        <EmptyState
-          title="Nothing to audit yet"
-          description="Add your catalog first — the audit scores every SKU against what AI shopping surfaces require and tells you exactly what to fix."
-          action={
-            <Link
-              href="/dashboard/sources"
-              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800"
-            >
-              Add your catalog
-            </Link>
-          }
-        />
-      </>
+      <div className="mx-auto max-w-6xl">
+        <h1 className="text-2xl font-semibold tracking-tight">Readiness audit</h1>
+        <Card className="mt-6 flex flex-col items-center gap-3 p-12 text-center">
+          <h2 className="text-lg font-semibold">Nothing to audit yet</h2>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Add your catalog first — the audit scores every SKU against what AI
+            shopping surfaces require and tells you exactly what to fix.
+          </p>
+          <LinkButton href="/dashboard/sources">Add your catalog</LinkButton>
+        </Card>
+      </div>
     );
   }
 
@@ -64,65 +49,80 @@ export default async function AuditPage() {
     sellerSettingsOf(m),
   );
 
-  // Impact-ordered fix list: rule weight × affected items.
-  const byRule = new Map<
-    string,
-    { message: string; severity: "error" | "warning" | "info"; count: number; impact: number }
-  >();
+  // Per-rule aggregation for the v0 table: affected counts + sample SKUs.
+  const titleByItemId = new Map(
+    audit.items.map(({ entry }) => [entry.itemId, entry.title]),
+  );
+  const affectedByCode = new Map<string, string[]>();
   for (const item of audit.items) {
     for (const f of item.findings) {
-      const agg = byRule.get(f.code) ?? {
-        message: f.message,
-        severity: f.severity,
-        count: 0,
-        impact: 0,
-      };
-      agg.count++;
-      agg.impact += f.weight;
-      byRule.set(f.code, agg);
+      const list = affectedByCode.get(f.code) ?? [];
+      list.push(item.entry.itemId);
+      affectedByCode.set(f.code, list);
     }
   }
-  const fixList = [...byRule.entries()].sort((a, b) => b[1].impact - a[1].impact);
-  const worstItems = [...audit.items].sort((a, b) => a.score - b.score).slice(0, 50);
+  const rules: RuleRow[] = RULE_CATALOG.map((meta) => {
+    const affected = affectedByCode.get(meta.code) ?? [];
+    return {
+      ...meta,
+      affected: affected.length,
+      total: audit.items.length,
+      samples: affected.slice(0, 5).map((sku) => ({
+        sku,
+        title: titleByItemId.get(sku) ?? null,
+      })),
+    };
+  }).sort((a, b) => b.affected * b.weight - a.affected * a.weight);
+
+  const failing = rules.filter((r) => r.affected > 0).length;
+  const critical = rules.filter((r) => r.affected > 0 && r.severity === "error").length;
+  const enrichmentAvailable = Boolean(process.env.ANTHROPIC_API_KEY);
 
   return (
-    <>
-      <PageHeader
-        title="Agent-readiness audit"
-        description="How ready your catalog is for AI shopping surfaces — and what to fix first."
-        action={<ReAuditButton />}
-      />
-
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="flex items-center gap-4">
-          <span className={`text-5xl font-bold ${GRADE_COLOR[audit.grade]}`}>
-            {audit.grade}
-          </span>
-          <div>
-            <p className="text-2xl font-semibold">{audit.catalogScore}/100</p>
-            <p className="text-sm text-slate-500">catalog score</p>
-          </div>
-        </Card>
-        <Card>
-          <p className="text-sm text-slate-500">Items audited</p>
-          <p className="mt-1 text-2xl font-semibold">{audit.items.length}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-slate-500">Open findings</p>
-          <p className="mt-1 text-2xl font-semibold">
-            {audit.items.reduce((s, i) => s + i.findings.length, 0) +
-              audit.catalogFindings.length}
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Readiness audit</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {audit.items.length.toLocaleString()} items audited live against{" "}
+            {RULE_CATALOG.length} weighted rules.
           </p>
+        </div>
+        <div className="flex gap-2">
+          <ExportCsvButton />
+          <ReAuditButton />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-4">
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Score</p>
+          <p className="mt-1 text-2xl font-semibold text-primary">
+            {audit.catalogScore}
+            <span className="ml-1 text-base font-medium text-muted-foreground">/ 100</span>
+          </p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Grade</p>
+          <p className="mt-1 text-2xl font-semibold">{audit.grade}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Rules failing</p>
+          <p className="mt-1 text-2xl font-semibold text-destructive">{failing}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Critical</p>
+          <p className="mt-1 text-2xl font-semibold text-accent-amber-foreground">{critical}</p>
         </Card>
       </div>
 
       {audit.catalogFindings.length > 0 && (
-        <Card className="mb-6 border-red-200 bg-red-50">
-          <h2 className="mb-2 text-base font-semibold text-red-800">
+        <Card className="border-destructive/30 bg-destructive/5 p-6">
+          <h2 className="mb-2 text-base font-semibold text-destructive">
             Catalog-level blockers
           </h2>
           {audit.catalogFindings.map((f) => (
-            <p key={f.code} className="text-sm text-red-700">
+            <p key={f.code} className="text-sm text-destructive">
               {f.message} —{" "}
               <Link href="/dashboard/settings" className="underline">
                 fix in Settings
@@ -132,52 +132,7 @@ export default async function AuditPage() {
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <h2 className="mb-3 text-base font-semibold">Fix first (by impact)</h2>
-          {fixList.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              Nothing to fix — your catalog is fully agent-ready. 🎉
-            </p>
-          ) : (
-            <ul className="grid gap-2">
-              {fixList.map(([code, agg]) => (
-                <li key={code} className="flex items-start justify-between gap-3 text-sm">
-                  <div>
-                    <Badge tone={SEVERITY_TONE[agg.severity]}>{code}</Badge>
-                    <p className="mt-1 text-slate-600">{agg.message}</p>
-                  </div>
-                  <span className="shrink-0 text-slate-500">{agg.count} items</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-
-        <Card className="overflow-x-auto p-0">
-          <h2 className="px-4 pt-4 text-base font-semibold">Lowest-scoring items</h2>
-          <table className="mt-2 w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-2">Item</th>
-                <th className="px-4 py-2 text-right">Score</th>
-                <th className="px-4 py-2">Top issues</th>
-              </tr>
-            </thead>
-            <tbody>
-              {worstItems.map(({ entry, findings, score }) => (
-                <tr key={entry.itemId} className="border-b border-slate-100 align-top last:border-0">
-                  <td className="px-4 py-2 font-mono text-xs">{entry.itemId}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{score}</td>
-                  <td className="px-4 py-2 text-xs text-slate-500">
-                    {findings.slice(0, 3).map((f) => f.code).join(", ") || "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      </div>
-    </>
+      <AuditTable rules={rules} enrichmentAvailable={enrichmentAvailable} />
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { getDb } from "@/db";
 import { forMerchant } from "@/db/tenant";
 import { requireMerchant } from "@/lib/require-merchant";
+import { timeAgo } from "@/lib/time";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { UploadFlow } from "./upload";
 import { ConnectWoo, SyncNowButton } from "./connect-woo";
@@ -14,7 +15,7 @@ export default async function SourcesPage() {
   const sources = await scope.sources.list();
 
   return (
-    <>
+    <div className="mx-auto max-w-5xl">
       <PageHeader
         title="Catalog sources"
         description="Where your products come from — file uploads and store connections."
@@ -24,7 +25,7 @@ export default async function SourcesPage() {
         <Card className="mb-8 overflow-x-auto p-0">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Last sync</th>
@@ -33,15 +34,13 @@ export default async function SourcesPage() {
             </thead>
             <tbody>
               {sources.map((s) => (
-                <tr key={s.id} className="border-b border-slate-100 last:border-0">
+                <tr key={s.id} className="border-b border-border/60 last:border-0">
                   <td className="px-4 py-2.5">{s.name}</td>
                   <td className="px-4 py-2.5">
                     <Badge tone={s.type === "csv" ? "neutral" : "success"}>{s.type}</Badge>
                   </td>
-                  <td className="px-4 py-2.5 text-slate-500">
-                    {s.lastSyncAt
-                      ? new Date(s.lastSyncAt).toLocaleString("en-GB", { timeZone: "UTC" }) + " UTC"
-                      : "never"}
+                  <td className="px-4 py-2.5 text-muted-foreground">
+                    {s.lastSyncAt ? timeAgo(s.lastSyncAt) : "never"}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {s.type !== "csv" && <SyncNowButton sourceId={s.id} />}
@@ -56,14 +55,14 @@ export default async function SourcesPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <h2 className="mb-1 text-base font-semibold">Upload a CSV / XLSX catalog</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-muted-foreground">
             Works with any cart. We auto-detect your columns; you confirm the mapping.
           </p>
           <UploadFlow />
         </Card>
         <Card>
           <h2 className="mb-1 text-base font-semibold">Connect WooCommerce</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-muted-foreground">
             Create a <strong>read-only</strong> REST key under WooCommerce →
             Settings → Advanced → REST API. Credentials are encrypted at rest.
           </p>
@@ -71,7 +70,7 @@ export default async function SourcesPage() {
         </Card>
         <Card>
           <h2 className="mb-1 text-base font-semibold">Import from a feed URL</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-muted-foreground">
             Already publish a Google Shopping XML or CSV feed? Point us at it —
             works with any cart, re-synced automatically every 6 hours.
           </p>
@@ -79,7 +78,7 @@ export default async function SourcesPage() {
         </Card>
         <Card>
           <h2 className="mb-1 text-base font-semibold">Connect BigCommerce</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-muted-foreground">
             Create a store-level API account (Settings → Store-level API
             accounts) with <strong>read-only</strong> Products scope. The token
             is encrypted at rest.
@@ -88,7 +87,7 @@ export default async function SourcesPage() {
         </Card>
         <Card>
           <h2 className="mb-1 text-base font-semibold">Connect Magento / Adobe Commerce</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-muted-foreground">
             Create an integration (System → Extensions → Integrations) with
             read-only <strong>Catalog</strong> scope and paste the access
             token. Encrypted at rest.
@@ -96,6 +95,6 @@ export default async function SourcesPage() {
           <ConnectMagento />
         </Card>
       </div>
-    </>
+    </div>
   );
 }

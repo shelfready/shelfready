@@ -17,7 +17,7 @@ export default async function SettingsPage() {
   const seller = sellerSettingsOf(m);
 
   return (
-    <>
+    <div className="mx-auto max-w-5xl">
       <PageHeader
         title="Settings"
         description="Seller details that every AI surface requires on feed items."
@@ -35,7 +35,7 @@ export default async function SettingsPage() {
         </Card>
         <Card>
           <h2 className="mb-1 text-base font-semibold">Feed URL token</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-muted-foreground">
             Your feed URLs contain a private token. Rotating it immediately
             invalidates every existing feed URL — re-copy them from the Feeds
             page afterwards.
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
         </Card>
         <Card className="lg:col-span-2">
           <h2 className="mb-1 text-base font-semibold">API keys</h2>
-          <p className="mb-4 text-sm text-slate-500">
+          <p className="mb-4 text-sm text-muted-foreground">
             Bearer keys for the REST API (<code className="font-mono">/api/v1</code>) —
             catalog push, sync triggers, feed URLs, audit results. Keys are
             hashed at rest and shown once at creation.
@@ -64,6 +64,6 @@ export default async function SettingsPage() {
           />
         </Card>
       </div>
-    </>
+    </div>
   );
 }

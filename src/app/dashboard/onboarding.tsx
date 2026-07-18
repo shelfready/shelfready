@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Check } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export interface OnboardingState {
   hasSource: boolean;
@@ -17,7 +19,7 @@ const STEPS: {
   {
     key: "hasSource",
     title: "Add your catalog",
-    description: "Upload a CSV/XLSX or connect WooCommerce.",
+    description: "Upload a CSV/XLSX or connect your store.",
     href: "/dashboard/sources",
   },
   {
@@ -45,10 +47,10 @@ export function OnboardingChecklist({ state }: { state: OnboardingState }) {
   if (done === STEPS.length) return null;
 
   return (
-    <Card className="mb-6 border-brand-200 bg-brand-50/50">
+    <Card className="border-primary/20 bg-primary/[0.03] p-6">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold">Get agent-ready</h2>
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-muted-foreground">
           {done}/{STEPS.length} done
         </span>
       </div>
@@ -59,24 +61,30 @@ export function OnboardingChecklist({ state }: { state: OnboardingState }) {
             <li key={step.key}>
               <Link
                 href={step.href}
-                className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
+                className={cn(
+                  "flex items-start gap-3 rounded-lg border p-3 transition-colors",
                   complete
-                    ? "border-brand-200 bg-white/60 opacity-70"
-                    : "border-slate-200 bg-white hover:border-brand-400"
-                }`}
+                    ? "border-primary/20 bg-card/60 opacity-70"
+                    : "border-border bg-card hover:border-primary/40",
+                )}
               >
                 <span
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    complete ? "bg-brand-600 text-white" : "bg-slate-200 text-slate-600"
-                  }`}
+                  className={cn(
+                    "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                    complete
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                  )}
                 >
-                  {complete ? "✓" : i + 1}
+                  {complete ? <Check className="size-3" /> : i + 1}
                 </span>
                 <span>
-                  <span className="block text-sm font-medium text-slate-900">
+                  <span className="block text-sm font-medium text-foreground">
                     {step.title}
                   </span>
-                  <span className="block text-xs text-slate-500">{step.description}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {step.description}
+                  </span>
                 </span>
               </Link>
             </li>

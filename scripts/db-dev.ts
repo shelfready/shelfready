@@ -16,7 +16,9 @@ async function main() {
   const db = await PGlite.create({ dataDir: "./.pglite" });
   await migrate(drizzle(db), { migrationsFolder: "./drizzle" });
 
-  const server = new PGLiteSocketServer({ db, port: 5433, maxConnections: 10 });
+  // Above the pg Pool default (10) — parallel RSC renders open the full
+  // pool and connections past the cap get ECONNRESET.
+  const server = new PGLiteSocketServer({ db, port: 5433, maxConnections: 25 });
   await server.start();
   console.log(
     "pglite dev db on postgres://localhost:5433/postgres (data: ./.pglite)",

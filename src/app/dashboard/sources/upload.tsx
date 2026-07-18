@@ -84,7 +84,7 @@ export function UploadFlow() {
       <input
         type="file"
         accept=".csv,.xlsx,.xls"
-        className="text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-brand-800"
+        className="text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/85"
         onChange={(e) => {
           const f = e.target.files?.[0] ?? null;
           setFile(f);
@@ -96,21 +96,21 @@ export function UploadFlow() {
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
       {busy && (
-        <p className="flex items-center gap-2 text-sm text-slate-500">
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Spinner /> Working…
         </p>
       )}
 
       {preview && !result && (
         <div className="grid gap-3">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             <strong>{preview.rowCount}</strong> rows detected. Confirm the column
             mapping:
           </p>
           <div className="grid gap-2">
             {CANONICAL_COLUMNS.map((field) => (
               <div key={field} className="grid grid-cols-2 items-center gap-2">
-                <span className="text-sm text-slate-600">{label[field]}</span>
+                <span className="text-sm text-muted-foreground">{label[field]}</span>
                 <Select
                   value={columns[field] ?? ""}
                   onChange={(e) =>
@@ -143,7 +143,7 @@ export function UploadFlow() {
       )}
 
       {result && (
-        <div className="grid gap-2 rounded-lg bg-slate-50 p-4">
+        <div className="grid gap-2 rounded-lg bg-muted/60 p-4">
           <p className="flex flex-wrap items-center gap-2 text-sm">
             <Badge tone="success">{result.stats.upserted} imported</Badge>
             {result.stats.rejected > 0 && (
@@ -154,7 +154,7 @@ export function UploadFlow() {
             )}
           </p>
           {result.stats.rejections.length > 0 && (
-            <ul className="grid gap-1 text-xs text-slate-600">
+            <ul className="grid gap-1 text-xs text-muted-foreground">
               {result.stats.rejections.slice(0, 20).map((r, i) => (
                 <li key={i}>
                   <code className="font-mono">{r.externalId ?? "(no id)"}</code>:{" "}

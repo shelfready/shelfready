@@ -53,15 +53,15 @@ export function ApiKeysPanel({ initialKeys }: { initialKeys: KeyRow[] }) {
   return (
     <div className="grid gap-4">
       {created && (
-        <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-sm">
-          <p className="mb-2 font-medium text-brand-800">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+          <p className="mb-2 font-medium text-primary">
             Copy this key now — it won&apos;t be shown again.
           </p>
           <code className="block break-all rounded bg-white px-2 py-1 font-mono text-xs">
             {created.key}
           </code>
           <button
-            className="mt-2 text-xs text-brand-700 underline"
+            className="mt-2 text-xs text-primary underline"
             onClick={() => void navigator.clipboard.writeText(created.key)}
           >
             Copy to clipboard
@@ -87,7 +87,7 @@ export function ApiKeysPanel({ initialKeys }: { initialKeys: KeyRow[] }) {
       {keys.length > 0 && (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <th className="py-2 pr-2">Name</th>
               <th className="py-2 pr-2">Key</th>
               <th className="py-2 pr-2">Last used</th>
@@ -96,10 +96,10 @@ export function ApiKeysPanel({ initialKeys }: { initialKeys: KeyRow[] }) {
           </thead>
           <tbody>
             {keys.map((k) => (
-              <tr key={k.id} className="border-b border-slate-100 last:border-0">
+              <tr key={k.id} className="border-b border-border/60 last:border-0">
                 <td className="py-2 pr-2">{k.name}</td>
                 <td className="py-2 pr-2 font-mono text-xs">{k.prefix}…</td>
-                <td className="py-2 pr-2 text-slate-500">
+                <td className="py-2 pr-2 text-muted-foreground">
                   {k.lastUsedAt
                     ? new Date(k.lastUsedAt).toLocaleString("en-GB", { timeZone: "UTC" }) + " UTC"
                     : "never"}
